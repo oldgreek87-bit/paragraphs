@@ -353,10 +353,22 @@
             background: #000;
             color: #fff;
         }
+
+        .debug {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            padding: 5px;
+            background: #fff;
+            border: 1px solid #000;
+            font-size: 10px;
+            max-width: 200px;
+        }
     </style>
 </head>
 <body>
     <div class="connection-status" id="connection-status">Connecting...</div>
+    <div class="debug" id="debug">Debug info</div>
     
     <div class="container">
         <!-- Main Menu -->
@@ -463,17 +475,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-database-compat.min.js"></script>
 
     <script>
-        // Firebase configuration - you'll need to replace this with your own
+        // Firebase configuration
         const firebaseConfig = {
-  apiKey: "AIzaSyCq0zaZKpWj1cWmiu-pqiHo4MuLmA9xZkc",
-  authDomain: "paragraphs-e9d60.firebaseapp.com",
-  databaseURL: "https://paragraphs-e9d60-default-rtdb.firebaseio.com",
-  projectId: "paragraphs-e9d60",
-  storageBucket: "paragraphs-e9d60.firebasestorage.app",
-  messagingSenderId: "116355067615",
-  appId: "1:116355067615:web:52288095ad38472545836a",
-  measurementId: "G-FHQWN8GYML"
-};
+            apiKey: "AIzaSyCq0zaZKpWj1cWmiu-pqiHo4MuLmA9xZkc",
+            authDomain: "paragraphs-e9d60.firebaseapp.com",
+            databaseURL: "https://paragraphs-e9d60-default-rtdb.firebaseio.com",
+            projectId: "paragraphs-e9d60",
+            storageBucket: "paragraphs-e9d60.firebasestorage.app",
+            messagingSenderId: "116355067615",
+            appId: "1:116355067615:web:52288095ad38472545836a",
+            measurementId: "G-FHQWN8GYML"
+        };
 
         // Initialize Firebase
         let db;
@@ -497,8 +509,8 @@
                 }
             });
         } catch (error) {
-            console.log('Firebase not configured - using demo mode');
-            document.getElementById('connection-status').textContent = 'Demo Mode (Local Only)';
+            console.log('Firebase error:', error);
+            document.getElementById('connection-status').textContent = 'Error';
         }
 
         // Game state
@@ -515,13 +527,18 @@
             maxRounds: 10,
             anonymousMode: false,
             scores: {},
-            submittedSentences: new Set(),
-            votedParticipants: new Set(),
+            submittedSentences: [],
+            votedParticipants: [],
             isHost: false
         };
 
         let roomRef = null;
         let completedParagraphs = JSON.parse(localStorage.getItem('paragraphs') || '[]');
+
+        function debug(msg) {
+            console.log(msg);
+            document.getElementById('debug').textContent = msg;
+        }
 
         // Utility functions
         function generateRoomId() {
@@ -543,7 +560,7 @@
             // Update participants list
             const participantsList = document.getElementById('participants-list');
             participantsList.innerHTML = gameState.participants.map(p => {
-                const hasSubmitted = gameState.submittedSentences.has(p);
+                const hasSubmitted = gameState.submittedSentences.includes(p);
                 const isCurrentPlayer = p === gameState.playerName;
                 return `<div class="participant${hasSubmitted ? ' ready' : ''}${isCurrentPlayer ? ' current-player' : ''}">${p}</div>`;
             }).join('');
@@ -555,7 +572,7 @@
         }
 
         function updateScoreboard() {
-            const scoreboardHtml = Object.entries(gameState.scores)
+            const scoreboardHtml = Object.entries(gameState.scores || {})
                 .sort(([,a], [,b]) => b - a)
                 .map(([player, score]) => `<div class="score-item">${player}: ${score} votes</div>`)
                 .join('');
@@ -570,14 +587,18 @@
         }
 
         function updateGamePhaseUI() {
+            debug(`Phase: ${gameState.currentPhase}, Participants: ${gameState.participants.length}`);
+            
             if (gameState.currentPhase === 'writing') {
                 document.getElementById('writing-phase').classList.remove('hidden');
                 document.getElementById('voting-phase').classList.add('hidden');
                 document.getElementById('phase-indicator').className = 'phase-indicator phase-writing';
+                document.getElementById('phase-indicator').textContent = `Round ${gameState.round}: Write the next sentence`;
             } else if (gameState.currentPhase === 'voting') {
                 document.getElementById('writing-phase').classList.add('hidden');
                 document.getElementById('voting-phase').classList.remove('hidden');
                 document.getElementById('phase-indicator').className = 'phase-indicator phase-voting';
+                document.getElementById('phase-indicator').textContent = 'Vote for the best sentence';
                 
                 // Rebuild voting options
                 const votingContainer = document.getElementById('voting-options');
@@ -599,14 +620,16 @@
         function saveRoomState() {
             if (!db || !gameState.roomId) return;
             
+            debug(`Saving state: ${gameState.currentPhase}`);
+            
             const roomData = {
                 ...gameState,
-                submittedSentences: Array.from(gameState.submittedSentences),
-                votedParticipants: Array.from(gameState.votedParticipants),
                 lastUpdate: Date.now()
             };
             
-            db.ref('rooms/' + gameState.roomId).set(roomData);
+            db.ref('rooms/' + gameState.roomId).set(roomData).catch(error => {
+                console.error('Error saving room state:', error);
+            });
         }
 
         function listenToRoom(roomId) {
@@ -616,13 +639,13 @@
             roomRef.on('value', (snapshot) => {
                 const roomData = snapshot.val();
                 if (roomData) {
+                    debug(`Received update: ${roomData.currentPhase}`);
+                    
                     const wasHost = gameState.isHost;
                     const playerName = gameState.playerName;
                     
                     gameState = {
                         ...roomData,
-                        submittedSentences: new Set(roomData.submittedSentences || []),
-                        votedParticipants: new Set(roomData.votedParticipants || []),
                         isHost: wasHost,
                         playerName: playerName
                     };
@@ -631,9 +654,11 @@
                     updateScoreboard();
                     updateGamePhaseUI();
                     
-                    // Auto-start if enough participants
+                    // Auto-start if enough participants and waiting
                     if (gameState.participants.length >= 2 && gameState.currentPhase === 'waiting') {
-                        startWriting();
+                        setTimeout(() => {
+                            startWriting();
+                        }, 1000);
                     }
                 }
             });
@@ -716,10 +741,14 @@
                 gameState.scores = {};
                 gameState.scores[gameState.playerName] = 0;
                 gameState.currentPhase = 'waiting';
+                gameState.submittedSentences = [];
+                gameState.votedParticipants = [];
+                gameState.sentences = [];
+                gameState.votingOptions = [];
+                gameState.currentParagraph = '';
+                gameState.round = 1;
                 
-                if (db) {
-                    saveRoomState();
-                }
+                saveRoomState();
             } else {
                 // Player joins existing room
                 if (db) {
@@ -728,12 +757,11 @@
                         if (roomData) {
                             if (!roomData.participants.includes(gameState.playerName)) {
                                 roomData.participants.push(gameState.playerName);
+                                roomData.scores = roomData.scores || {};
                                 roomData.scores[gameState.playerName] = 0;
                                 
                                 gameState = {
                                     ...roomData,
-                                    submittedSentences: new Set(roomData.submittedSentences || []),
-                                    votedParticipants: new Set(roomData.votedParticipants || []),
                                     playerName: gameState.playerName,
                                     isHost: false
                                 };
@@ -756,85 +784,80 @@
 
         function startWriting() {
             if (gameState.participants.length < 2) return;
+            if (gameState.currentPhase === 'writing') return; // Already in writing phase
+            
+            debug('Starting writing phase');
             
             gameState.currentPhase = 'writing';
             gameState.sentences = [];
-            gameState.submittedSentences.clear();
+            gameState.submittedSentences = [];
+            gameState.votingOptions = [];
+            gameState.selectedOption = null;
             
-            document.getElementById('phase-indicator').textContent = `Round ${gameState.round}: Write the next sentence`;
-            document.getElementById('phase-indicator').className = 'phase-indicator phase-writing';
-            document.getElementById('writing-phase').classList.remove('hidden');
-            document.getElementById('voting-phase').classList.add('hidden');
-            
-            document.getElementById('sentence-input').focus();
+            updateGamePhaseUI();
             updateUI();
+            saveRoomState();
             
-            if (db) {
-                saveRoomState();
-            }
+            setTimeout(() => {
+                document.getElementById('sentence-input').focus();
+            }, 100);
         }
 
         function submitSentence() {
             const input = document.getElementById('sentence-input');
             const sentence = input.value.trim();
             
+            debug(`Submit attempt: "${sentence}"`);
+            
             if (!sentence) {
                 alert('Please write a sentence before submitting');
                 return;
             }
             
-            if (gameState.submittedSentences.has(gameState.playerName)) {
+            if (gameState.submittedSentences.includes(gameState.playerName)) {
                 alert('You have already submitted a sentence for this round');
                 return;
             }
             
+            // Add user's sentence
+            gameState.sentences = gameState.sentences || [];
             gameState.sentences.push({
                 text: sentence,
                 author: gameState.playerName,
                 votes: 0
             });
             
-            gameState.submittedSentences.add(gameState.playerName);
+            gameState.submittedSentences.push(gameState.playerName);
             input.value = '';
             
-            if (db) {
-                saveRoomState();
-            }
+            debug(`Submitted. Total sentences: ${gameState.sentences.length}, Submitted by: ${gameState.submittedSentences.length}`);
             
+            saveRoomState();
             updateUI();
             
-            if (gameState.submittedSentences.size === gameState.participants.length) {
-                startVotingPhase();
+            if (gameState.submittedSentences.length === gameState.participants.length) {
+                debug('All submitted, starting voting');
+                setTimeout(() => {
+                    startVotingPhase();
+                }, 1000);
             } else {
-                document.getElementById('phase-indicator').textContent = `Waiting for ${gameState.participants.length - gameState.submittedSentences.size} more participants...`;
+                document.getElementById('phase-indicator').textContent = `Waiting for ${gameState.participants.length - gameState.submittedSentences.length} more participants...`;
                 document.getElementById('writing-phase').classList.add('hidden');
             }
         }
 
         function startVotingPhase() {
+            debug('Starting voting phase');
+            
             gameState.currentPhase = 'voting';
             gameState.selectedOption = null;
-            gameState.votedParticipants.clear();
+            gameState.votedParticipants = [];
             
-            document.getElementById('phase-indicator').textContent = 'Vote for the best sentence';
-            document.getElementById('phase-indicator').className = 'phase-indicator phase-voting';
-            document.getElementById('writing-phase').classList.add('hidden');
-            document.getElementById('voting-phase').classList.remove('hidden');
-            
+            // Randomize options
             gameState.votingOptions = [...gameState.sentences].sort(() => Math.random() - 0.5);
             
-            const votingContainer = document.getElementById('voting-options');
-            votingContainer.innerHTML = gameState.votingOptions.map((option, index) => `
-                <div class="option" onclick="voteForOption(${index})">
-                    <div class="option-label">Option ${String.fromCharCode(65 + index)}</div>
-                    <div>${option.text}</div>
-                    <div class="vote-count" id="vote-count-${index}">0 votes</div>
-                </div>
-            `).join('');
-            
-            if (db) {
-                saveRoomState();
-            }
+            updateGamePhaseUI();
+            saveRoomState();
         }
 
         function voteForOption(index) {
@@ -844,10 +867,13 @@
                 return;
             }
             
-            gameState.selectedOption = index;
-            gameState.votingOptions[index].votes++;
-            gameState.votedParticipants.add(gameState.playerName);
+            debug(`Voting for option ${index}`);
             
+            gameState.selectedOption = index;
+            gameState.votingOptions[index].votes = (gameState.votingOptions[index].votes || 0) + 1;
+            gameState.votedParticipants.push(gameState.playerName);
+            
+            // Update UI
             document.querySelectorAll('.option').forEach((el, i) => {
                 if (i === index) {
                     el.classList.add('selected');
@@ -855,17 +881,12 @@
                 el.style.pointerEvents = 'none';
             });
             
-            document.getElementById(`vote-count-${index}`).textContent = 
-                `${gameState.votingOptions[index].votes} votes`;
-                
             document.getElementById('phase-indicator').textContent = 
-                `Waiting for ${gameState.participants.length - gameState.votedParticipants.size} more votes...`;
+                `Waiting for ${gameState.participants.length - gameState.votedParticipants.length} more votes...`;
             
-            if (db) {
-                saveRoomState();
-            }
+            saveRoomState();
             
-            if (gameState.votedParticipants.size === gameState.participants.length) {
+            if (gameState.votedParticipants.length === gameState.participants.length) {
                 setTimeout(() => {
                     showResults();
                 }, 1500);
@@ -873,12 +894,14 @@
         }
 
         function showResults() {
+            debug('Showing results');
+            
             const winner = gameState.votingOptions.reduce((prev, current) => 
-                (prev.votes > current.votes) ? prev : current
+                ((prev.votes || 0) > (current.votes || 0)) ? prev : current
             );
             
             if (gameState.scores[winner.author] !== undefined) {
-                gameState.scores[winner.author] += winner.votes;
+                gameState.scores[winner.author] += (winner.votes || 0);
             }
             
             if (gameState.currentParagraph) {
@@ -892,10 +915,7 @@
             
             gameState.round++;
             updateScoreboard();
-            
-            if (db) {
-                saveRoomState();
-            }
+            saveRoomState();
             
             if (gameState.round > gameState.maxRounds) {
                 saveParagraph();
@@ -922,11 +942,15 @@
         }
 
         function startNewParagraph() {
+            debug('Starting new paragraph');
+            
             gameState.currentParagraph = '';
             gameState.round = 1;
             gameState.sentences = [];
-            gameState.submittedSentences.clear();
-            gameState.votedParticipants.clear();
+            gameState.submittedSentences = [];
+            gameState.votedParticipants = [];
+            gameState.votingOptions = [];
+            gameState.selectedOption = null;
             gameState.currentPhase = 'waiting';
             
             document.getElementById('phase-indicator').textContent = 'Paragraph saved! Starting new paragraph...';
@@ -934,10 +958,7 @@
             document.getElementById('voting-phase').classList.add('hidden');
             
             updateUI();
-            
-            if (db) {
-                saveRoomState();
-            }
+            saveRoomState();
             
             setTimeout(() => {
                 startWriting();
