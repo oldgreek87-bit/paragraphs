@@ -338,9 +338,26 @@
             opacity: 0.7;
             padding: 20px;
         }
+
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border: 1px solid #000;
+            background: #fff;
+            font-size: 12px;
+        }
+
+        .connection-status.connected {
+            background: #000;
+            color: #fff;
+        }
     </style>
 </head>
 <body>
+    <div class="connection-status" id="connection-status">Connecting...</div>
+    
     <div class="container">
         <!-- Main Menu -->
         <div id="main-menu" class="screen">
@@ -388,7 +405,7 @@
             <div style="margin: 20px 0;">
                 <input type="text" id="player-name" placeholder="Enter your name..." style="width: 100%; padding: 10px; border: 2px solid #000; font-family: inherit; margin-bottom: 10px;">
                 <div style="text-align: center;">
-                    <button class="btn" onclick="startRoom()">START ROOM</button>
+                    <button class="btn" onclick="startRoom()">JOIN ROOM</button>
                 </div>
             </div>
         </div>
@@ -436,13 +453,54 @@
             
             <!-- Controls -->
             <div style="text-align: center; margin-top: 20px;">
-                <button class="btn" onclick="addParticipant()">ADD PARTICIPANT</button>
                 <button class="btn" onclick="leaveRoom()">LEAVE ROOM</button>
             </div>
         </div>
     </div>
 
+    <!-- Firebase SDK -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-database-compat.min.js"></script>
+
     <script>
+        // Firebase configuration - you'll need to replace this with your own
+        const firebaseConfig = {
+  apiKey: "AIzaSyCq0zaZKpWj1cWmiu-pqiHo4MuLmA9xZkc",
+  authDomain: "paragraphs-e9d60.firebaseapp.com",
+  databaseURL: "https://paragraphs-e9d60-default-rtdb.firebaseio.com",
+  projectId: "paragraphs-e9d60",
+  storageBucket: "paragraphs-e9d60.firebasestorage.app",
+  messagingSenderId: "116355067615",
+  appId: "1:116355067615:web:52288095ad38472545836a",
+  measurementId: "G-FHQWN8GYML"
+};
+
+        // Initialize Firebase
+        let db;
+        let connected = false;
+
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
+            
+            // Connection status
+            const connectedRef = db.ref('.info/connected');
+            connectedRef.on('value', (snapshot) => {
+                connected = snapshot.val();
+                const statusEl = document.getElementById('connection-status');
+                if (connected) {
+                    statusEl.textContent = 'Connected';
+                    statusEl.classList.add('connected');
+                } else {
+                    statusEl.textContent = 'Disconnected';
+                    statusEl.classList.remove('connected');
+                }
+            });
+        } catch (error) {
+            console.log('Firebase not configured - using demo mode');
+            document.getElementById('connection-status').textContent = 'Demo Mode (Local Only)';
+        }
+
         // Game state
         let gameState = {
             roomId: null,
@@ -458,10 +516,11 @@
             anonymousMode: false,
             scores: {},
             submittedSentences: new Set(),
-            votedParticipants: new Set()
+            votedParticipants: new Set(),
+            isHost: false
         };
 
-        // Global storage for completed paragraphs
+        let roomRef = null;
         let completedParagraphs = JSON.parse(localStorage.getItem('paragraphs') || '[]');
 
         // Utility functions
@@ -481,7 +540,7 @@
             document.getElementById('max-rounds').textContent = gameState.maxRounds;
             document.getElementById('current-paragraph').textContent = gameState.currentParagraph || 'Share room code with participants. Need at least 2 people to start.';
             
-            // Update participants list with submission status
+            // Update participants list
             const participantsList = document.getElementById('participants-list');
             participantsList.innerHTML = gameState.participants.map(p => {
                 const hasSubmitted = gameState.submittedSentences.has(p);
@@ -489,7 +548,7 @@
                 return `<div class="participant${hasSubmitted ? ' ready' : ''}${isCurrentPlayer ? ' current-player' : ''}">${p}</div>`;
             }).join('');
             
-            // Show room code prominently if less than 2 participants
+            // Show room code if less than 2 participants
             if (gameState.participants.length < 2) {
                 document.getElementById('phase-indicator').textContent = `Share room code: ${gameState.roomId} - Need ${2 - gameState.participants.length} more participant(s)`;
             }
@@ -508,6 +567,76 @@
                     ${scoreboardHtml}
                 `;
             }
+        }
+
+        function updateGamePhaseUI() {
+            if (gameState.currentPhase === 'writing') {
+                document.getElementById('writing-phase').classList.remove('hidden');
+                document.getElementById('voting-phase').classList.add('hidden');
+                document.getElementById('phase-indicator').className = 'phase-indicator phase-writing';
+            } else if (gameState.currentPhase === 'voting') {
+                document.getElementById('writing-phase').classList.add('hidden');
+                document.getElementById('voting-phase').classList.remove('hidden');
+                document.getElementById('phase-indicator').className = 'phase-indicator phase-voting';
+                
+                // Rebuild voting options
+                const votingContainer = document.getElementById('voting-options');
+                if (gameState.votingOptions && gameState.votingOptions.length > 0) {
+                    votingContainer.innerHTML = gameState.votingOptions.map((option, index) => `
+                        <div class="option${gameState.selectedOption === index ? ' selected' : ''}" onclick="voteForOption(${index})">
+                            <div class="option-label">Option ${String.fromCharCode(65 + index)}</div>
+                            <div>${option.text}</div>
+                            <div class="vote-count">${option.votes || 0} votes</div>
+                        </div>
+                    `).join('');
+                }
+            } else {
+                document.getElementById('writing-phase').classList.add('hidden');
+                document.getElementById('voting-phase').classList.add('hidden');
+            }
+        }
+
+        function saveRoomState() {
+            if (!db || !gameState.roomId) return;
+            
+            const roomData = {
+                ...gameState,
+                submittedSentences: Array.from(gameState.submittedSentences),
+                votedParticipants: Array.from(gameState.votedParticipants),
+                lastUpdate: Date.now()
+            };
+            
+            db.ref('rooms/' + gameState.roomId).set(roomData);
+        }
+
+        function listenToRoom(roomId) {
+            if (!db) return;
+            
+            roomRef = db.ref('rooms/' + roomId);
+            roomRef.on('value', (snapshot) => {
+                const roomData = snapshot.val();
+                if (roomData) {
+                    const wasHost = gameState.isHost;
+                    const playerName = gameState.playerName;
+                    
+                    gameState = {
+                        ...roomData,
+                        submittedSentences: new Set(roomData.submittedSentences || []),
+                        votedParticipants: new Set(roomData.votedParticipants || []),
+                        isHost: wasHost,
+                        playerName: playerName
+                    };
+                    
+                    updateUI();
+                    updateScoreboard();
+                    updateGamePhaseUI();
+                    
+                    // Auto-start if enough participants
+                    if (gameState.participants.length >= 2 && gameState.currentPhase === 'waiting') {
+                        startWriting();
+                    }
+                }
+            });
         }
 
         function displayCompletedParagraphs() {
@@ -534,16 +663,29 @@
         // Main functions
         function createRoom() {
             gameState.roomId = generateRoomId();
-            gameState.playerName = 'Host';
+            gameState.isHost = true;
             showScreen('room-setup');
         }
 
         function joinRoom() {
             const roomCode = document.getElementById('room-code').value.toUpperCase();
             if (roomCode.length === 4) {
-                gameState.roomId = roomCode;
-                gameState.playerName = `Player${Math.floor(Math.random() * 1000)}`;
-                showScreen('room-setup');
+                if (db) {
+                    // Check if room exists in Firebase
+                    db.ref('rooms/' + roomCode).once('value').then((snapshot) => {
+                        if (snapshot.exists()) {
+                            gameState.roomId = roomCode;
+                            gameState.isHost = false;
+                            showScreen('room-setup');
+                        } else {
+                            alert('Room not found. Please check the room code.');
+                        }
+                    });
+                } else {
+                    gameState.roomId = roomCode;
+                    gameState.isHost = false;
+                    showScreen('room-setup');
+                }
             } else {
                 alert('Please enter a valid 4-character room code');
             }
@@ -564,26 +706,57 @@
             
             gameState.playerName = nameInput.value.trim();
             
-            const modeSelect = document.getElementById('mode-select');
-            const modes = { quick: 5, standard: 10, epic: 20 };
-            gameState.maxRounds = modes[modeSelect.value];
-            
-            // Initialize with just the current player
-            gameState.participants = [gameState.playerName];
-            gameState.scores[gameState.playerName] = 0;
+            if (gameState.isHost) {
+                // Host creates new room
+                const modeSelect = document.getElementById('mode-select');
+                const modes = { quick: 5, standard: 10, epic: 20 };
+                gameState.maxRounds = modes[modeSelect.value];
+                
+                gameState.participants = [gameState.playerName];
+                gameState.scores = {};
+                gameState.scores[gameState.playerName] = 0;
+                gameState.currentPhase = 'waiting';
+                
+                if (db) {
+                    saveRoomState();
+                }
+            } else {
+                // Player joins existing room
+                if (db) {
+                    db.ref('rooms/' + gameState.roomId).once('value').then((snapshot) => {
+                        const roomData = snapshot.val();
+                        if (roomData) {
+                            if (!roomData.participants.includes(gameState.playerName)) {
+                                roomData.participants.push(gameState.playerName);
+                                roomData.scores[gameState.playerName] = 0;
+                                
+                                gameState = {
+                                    ...roomData,
+                                    submittedSentences: new Set(roomData.submittedSentences || []),
+                                    votedParticipants: new Set(roomData.votedParticipants || []),
+                                    playerName: gameState.playerName,
+                                    isHost: false
+                                };
+                                
+                                saveRoomState();
+                            }
+                        }
+                    });
+                }
+            }
             
             showScreen('game-room');
             updateUI();
             updateScoreboard();
-        }
-
-        function checkAndStartWriting() {
-            if (gameState.participants.length >= 2 && gameState.currentPhase === 'waiting') {
-                startWriting();
+            
+            if (db) {
+                listenToRoom(gameState.roomId);
             }
         }
 
         function startWriting() {
+            if (gameState.participants.length < 2) return;
+            
             gameState.currentPhase = 'writing';
             gameState.sentences = [];
             gameState.submittedSentences.clear();
@@ -595,6 +768,10 @@
             
             document.getElementById('sentence-input').focus();
             updateUI();
+            
+            if (db) {
+                saveRoomState();
+            }
         }
 
         function submitSentence() {
@@ -611,7 +788,6 @@
                 return;
             }
             
-            // Add user's sentence
             gameState.sentences.push({
                 text: sentence,
                 author: gameState.playerName,
@@ -620,9 +796,13 @@
             
             gameState.submittedSentences.add(gameState.playerName);
             input.value = '';
+            
+            if (db) {
+                saveRoomState();
+            }
+            
             updateUI();
             
-            // Check if all participants have submitted
             if (gameState.submittedSentences.size === gameState.participants.length) {
                 startVotingPhase();
             } else {
@@ -641,7 +821,6 @@
             document.getElementById('writing-phase').classList.add('hidden');
             document.getElementById('voting-phase').classList.remove('hidden');
             
-            // Randomize options
             gameState.votingOptions = [...gameState.sentences].sort(() => Math.random() - 0.5);
             
             const votingContainer = document.getElementById('voting-options');
@@ -652,6 +831,10 @@
                     <div class="vote-count" id="vote-count-${index}">0 votes</div>
                 </div>
             `).join('');
+            
+            if (db) {
+                saveRoomState();
+            }
         }
 
         function voteForOption(index) {
@@ -665,7 +848,6 @@
             gameState.votingOptions[index].votes++;
             gameState.votedParticipants.add(gameState.playerName);
             
-            // Update UI
             document.querySelectorAll('.option').forEach((el, i) => {
                 if (i === index) {
                     el.classList.add('selected');
@@ -679,7 +861,10 @@
             document.getElementById('phase-indicator').textContent = 
                 `Waiting for ${gameState.participants.length - gameState.votedParticipants.size} more votes...`;
             
-            // Check if everyone voted
+            if (db) {
+                saveRoomState();
+            }
+            
             if (gameState.votedParticipants.size === gameState.participants.length) {
                 setTimeout(() => {
                     showResults();
@@ -688,31 +873,30 @@
         }
 
         function showResults() {
-            // Find winning sentence
             const winner = gameState.votingOptions.reduce((prev, current) => 
                 (prev.votes > current.votes) ? prev : current
             );
             
-            // Update score for the winning author
             if (gameState.scores[winner.author] !== undefined) {
                 gameState.scores[winner.author] += winner.votes;
             }
             
-            // Add to paragraph
             if (gameState.currentParagraph) {
                 gameState.currentParagraph += ' ' + winner.text;
             } else {
                 gameState.currentParagraph = winner.text;
             }
             
-            // Animate the addition
             const paragraphEl = document.getElementById('current-paragraph');
             paragraphEl.textContent = gameState.currentParagraph;
             
             gameState.round++;
             updateScoreboard();
             
-            // Check if paragraph is complete
+            if (db) {
+                saveRoomState();
+            }
+            
             if (gameState.round > gameState.maxRounds) {
                 saveParagraph();
                 startNewParagraph();
@@ -743,12 +927,17 @@
             gameState.sentences = [];
             gameState.submittedSentences.clear();
             gameState.votedParticipants.clear();
+            gameState.currentPhase = 'waiting';
             
             document.getElementById('phase-indicator').textContent = 'Paragraph saved! Starting new paragraph...';
             document.getElementById('writing-phase').classList.add('hidden');
             document.getElementById('voting-phase').classList.add('hidden');
             
             updateUI();
+            
+            if (db) {
+                saveRoomState();
+            }
             
             setTimeout(() => {
                 startWriting();
@@ -757,19 +946,12 @@
 
         function leaveRoom() {
             if (confirm('Are you sure you want to leave this room?')) {
+                if (roomRef) {
+                    roomRef.off();
+                    roomRef = null;
+                }
                 showScreen('main-menu');
                 displayCompletedParagraphs();
-            }
-        }
-
-        function addParticipant() {
-            const name = prompt('Enter participant name:');
-            if (name && name.trim() && !gameState.participants.includes(name.trim())) {
-                gameState.participants.push(name.trim());
-                gameState.scores[name.trim()] = 0;
-                updateUI();
-                updateScoreboard();
-                checkAndStartWriting();
             }
         }
 
