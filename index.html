@@ -1,1 +1,977 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PARAGRAPHS</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Courier Prime', monospace;
+            background: #ffffff;
+            color: #000000;
+            line-height: 1.4;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            border: 2px solid #000;
+            padding: 20px;
+            background: 
+                radial-gradient(circle at 25% 25%, #000 1px, transparent 1px),
+                radial-gradient(circle at 75% 75%, #000 1px, transparent 1px);
+            background-size: 4px 4px;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        .main-menu {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .btn {
+            background: #000;
+            color: #fff;
+            border: 2px solid #000;
+            padding: 12px 24px;
+            font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
+            margin: 5px;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.1s;
+        }
+        
+        .btn:hover {
+            background: #fff;
+            color: #000;
+        }
+        
+        .btn:active {
+            transform: translate(1px, 1px);
+        }
+        
+        .room-info {
+            border: 2px solid #000;
+            padding: 15px;
+            margin-bottom: 20px;
+            background: #fff;
+        }
+        
+        .paragraph-box {
+            border: 2px solid #000;
+            padding: 20px;
+            margin: 20px 0;
+            min-height: 150px;
+            background: #fff;
+        }
+        
+        .paragraph-text {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .phase-indicator {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 20px 0;
+            padding: 15px;
+            border: 2px solid #000;
+        }
+        
+        .phase-writing {
+            background: 
+                radial-gradient(circle, #000 25%, transparent 25%),
+                radial-gradient(circle, #000 25%, transparent 25%);
+            background-size: 4px 4px;
+            background-position: 0 0, 2px 2px;
+            opacity: 0.1;
+        }
+        
+        .phase-voting {
+            background: 
+                linear-gradient(45deg, #000 25%, transparent 25%),
+                linear-gradient(-45deg, #000 25%, transparent 25%);
+            background-size: 6px 6px;
+            opacity: 0.1;
+        }
+        
+        .input-area {
+            margin: 20px 0;
+        }
+        
+        .text-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #000;
+            font-family: inherit;
+            font-size: 14px;
+            background: #fff;
+            resize: none;
+            min-height: 80px;
+        }
+        
+        .text-input:focus {
+            outline: none;
+            box-shadow: inset 2px 2px 0px #000;
+        }
+        
+        .participants {
+            margin: 15px 0;
+            padding: 10px;
+            border: 1px solid #000;
+        }
+        
+        .participant {
+            display: inline-block;
+            margin: 2px 5px;
+            padding: 2px 8px;
+            border: 1px solid #000;
+            font-size: 12px;
+        }
+        
+        .participant.ready {
+            background: #000;
+            color: #fff;
+        }
+        
+        .participant.current-player {
+            background: 
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 1px,
+                    #000 1px,
+                    #000 2px
+                );
+            background-size: 4px 4px;
+            opacity: 0.2;
+        }
+        
+        .voting-options {
+            margin: 20px 0;
+        }
+        
+        .option {
+            border: 2px solid #000;
+            padding: 15px;
+            margin: 10px 0;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .option:hover {
+            background: 
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 2px,
+                    #000 2px,
+                    #000 3px
+                );
+            opacity: 0.1;
+        }
+        
+        .option.selected {
+            background: #000;
+            color: #fff;
+        }
+        
+        .option-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .vote-count {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            font-size: 12px;
+            background: #fff;
+            color: #000;
+            padding: 2px 6px;
+            border: 1px solid #000;
+        }
+        
+        .typewriter {
+            overflow: hidden;
+            border-right: 2px solid #000;
+            white-space: nowrap;
+            animation: typing 2s steps(40, end), blink-caret 0.75s step-end infinite;
+        }
+        
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+        
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: #000 }
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .room-settings {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #000;
+            background: 
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 1px,
+                    #000 1px,
+                    #000 2px
+                );
+            background-size: 10px 10px;
+            opacity: 0.05;
+        }
+        
+        .settings-row {
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .toggle {
+            width: 40px;
+            height: 20px;
+            border: 2px solid #000;
+            background: #fff;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .toggle.on {
+            background: #000;
+        }
+        
+        .toggle::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: #000;
+            top: 0px;
+            left: 0px;
+            transition: left 0.2s;
+        }
+        
+        .toggle.on::after {
+            background: #fff;
+            left: 20px;
+        }
+        
+        .scoreboard-title {
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #000;
+            padding-bottom: 5px;
+        }
+        
+        .score-item {
+            margin: 5px 0;
+            padding: 3px 0;
+        }
+        
+        .completed-paragraph {
+            border: 1px solid #000;
+            margin: 10px 0;
+            padding: 15px;
+            background: #fff;
+        }
+        
+        .paragraph-header {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #000;
+        }
+        
+        .paragraph-contributors {
+            font-size: 12px;
+            margin-top: 10px;
+            padding-top: 5px;
+            border-top: 1px solid #000;
+            opacity: 0.7;
+        }
+        
+        .no-paragraphs {
+            text-align: center;
+            font-style: italic;
+            opacity: 0.7;
+            padding: 20px;
+        }
 
+        .connection-status {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border: 1px solid #000;
+            background: #fff;
+            font-size: 12px;
+        }
+
+        .connection-status.connected {
+            background: #000;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="connection-status" id="connection-status">Connecting...</div>
+    
+    <div class="container">
+        <!-- Main Menu -->
+        <div id="main-menu" class="screen">
+            <div class="header">
+                <div class="logo">P A R A G R A P H S</div>
+                <div class="subtitle">Collaborative Writing Tool</div>
+            </div>
+            
+            <div class="main-menu">
+                <button class="btn" onclick="createRoom()">CREATE ROOM</button>
+                <input type="text" id="room-code" placeholder="Enter room code..." style="margin: 10px; padding: 8px; border: 2px solid #000; font-family: inherit;">
+                <button class="btn" onclick="joinRoom()">JOIN ROOM</button>
+            </div>
+            
+            <div style="margin-top: 40px;">
+                <div style="text-align: center; font-weight: bold; margin-bottom: 20px; font-size: 16px;">COMPLETED PARAGRAPHS</div>
+                <div id="completed-paragraphs" style="max-height: 400px; overflow-y: auto; border: 2px solid #000; padding: 15px;">
+                    <!-- Completed paragraphs will be displayed here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Room Setup -->
+        <div id="room-setup" class="screen hidden">
+            <div class="header">
+                <div class="logo">ROOM SETUP</div>
+            </div>
+            
+            <div class="room-settings">
+                <div class="settings-row">
+                    <span>Mode:</span>
+                    <select id="mode-select" style="border: 2px solid #000; padding: 5px; font-family: inherit;">
+                        <option value="quick">Quick (5 sentences)</option>
+                        <option value="standard" selected>Standard (10 sentences)</option>
+                        <option value="epic">Epic (20 sentences)</option>
+                    </select>
+                </div>
+                
+                <div class="settings-row">
+                    <span>Anonymous mode:</span>
+                    <div class="toggle" onclick="toggleAnonymous()"></div>
+                </div>
+            </div>
+            
+            <div style="margin: 20px 0;">
+                <input type="text" id="player-name" placeholder="Enter your name..." style="width: 100%; padding: 10px; border: 2px solid #000; font-family: inherit; margin-bottom: 10px;">
+                <div style="text-align: center;">
+                    <button class="btn" onclick="startRoom()">JOIN ROOM</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Room -->
+        <div id="game-room" class="screen hidden">
+            <div class="room-info">
+                <strong>Room: <span id="room-id">XXXX</span></strong> | 
+                Participants: <span id="participant-count">1</span> | 
+                Round: <span id="round-number">1</span>/<span id="max-rounds">10</span>
+            </div>
+            
+            <div class="paragraph-box">
+                <div class="paragraph-text" id="current-paragraph">
+                    Share room code with participants. Need at least 2 people to start.
+                </div>
+            </div>
+            
+            <div class="phase-indicator" id="phase-indicator">
+                Share room code with participants. Need at least 2 people to start.
+            </div>
+            
+            <div class="participants" id="participants-list">
+                <!-- Participants will be shown here -->
+            </div>
+            
+            <div id="scoreboard" style="margin: 15px 0; padding: 10px; border: 1px solid #000; background: #fff;">
+                <div class="scoreboard-title">SCOREBOARD</div>
+            </div>
+            
+            <!-- Writing Phase -->
+            <div id="writing-phase" class="input-area hidden">
+                <textarea class="text-input" id="sentence-input" placeholder="Write the next sentence..."></textarea>
+                <div style="text-align: center; margin-top: 10px;">
+                    <button class="btn" onclick="submitSentence()">SUBMIT</button>
+                </div>
+            </div>
+            
+            <!-- Voting Phase -->
+            <div id="voting-phase" class="hidden">
+                <div class="voting-options" id="voting-options">
+                    <!-- Options will be populated here -->
+                </div>
+            </div>
+            
+            <!-- Controls -->
+            <div style="text-align: center; margin-top: 20px;">
+                <button class="btn" onclick="leaveRoom()">LEAVE ROOM</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-app-compat.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/9.22.2/firebase-database-compat.min.js"></script>
+
+    <script>
+        // Firebase configuration - you'll need to replace this with your own
+        const firebaseConfig = {
+            apiKey: "AIzaSyDemo_ReplaceWithYourKey",
+            authDomain: "paragraphs-demo.firebaseapp.com",
+            databaseURL: "https://paragraphs-demo-default-rtdb.firebaseio.com/",
+            projectId: "paragraphs-demo",
+            storageBucket: "paragraphs-demo.appspot.com",
+            messagingSenderId: "123456789",
+            appId: "1:123456789:web:abc123def456"
+        };
+
+        // Initialize Firebase
+        let db;
+        let connected = false;
+
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
+            
+            // Connection status
+            const connectedRef = db.ref('.info/connected');
+            connectedRef.on('value', (snapshot) => {
+                connected = snapshot.val();
+                const statusEl = document.getElementById('connection-status');
+                if (connected) {
+                    statusEl.textContent = 'Connected';
+                    statusEl.classList.add('connected');
+                } else {
+                    statusEl.textContent = 'Disconnected';
+                    statusEl.classList.remove('connected');
+                }
+            });
+        } catch (error) {
+            console.log('Firebase not configured - using demo mode');
+            document.getElementById('connection-status').textContent = 'Demo Mode (Local Only)';
+        }
+
+        // Game state
+        let gameState = {
+            roomId: null,
+            playerName: '',
+            currentPhase: 'waiting',
+            participants: [],
+            currentParagraph: '',
+            sentences: [],
+            votingOptions: [],
+            selectedOption: null,
+            round: 1,
+            maxRounds: 10,
+            anonymousMode: false,
+            scores: {},
+            submittedSentences: new Set(),
+            votedParticipants: new Set(),
+            isHost: false
+        };
+
+        let roomRef = null;
+        let completedParagraphs = JSON.parse(localStorage.getItem('paragraphs') || '[]');
+
+        // Utility functions
+        function generateRoomId() {
+            return Math.random().toString(36).substring(2, 6).toUpperCase();
+        }
+
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        function updateUI() {
+            document.getElementById('room-id').textContent = gameState.roomId || 'XXXX';
+            document.getElementById('participant-count').textContent = gameState.participants.length;
+            document.getElementById('round-number').textContent = gameState.round;
+            document.getElementById('max-rounds').textContent = gameState.maxRounds;
+            document.getElementById('current-paragraph').textContent = gameState.currentParagraph || 'Share room code with participants. Need at least 2 people to start.';
+            
+            // Update participants list
+            const participantsList = document.getElementById('participants-list');
+            participantsList.innerHTML = gameState.participants.map(p => {
+                const hasSubmitted = gameState.submittedSentences.has(p);
+                const isCurrentPlayer = p === gameState.playerName;
+                return `<div class="participant${hasSubmitted ? ' ready' : ''}${isCurrentPlayer ? ' current-player' : ''}">${p}</div>`;
+            }).join('');
+            
+            // Show room code if less than 2 participants
+            if (gameState.participants.length < 2) {
+                document.getElementById('phase-indicator').textContent = `Share room code: ${gameState.roomId} - Need ${2 - gameState.participants.length} more participant(s)`;
+            }
+        }
+
+        function updateScoreboard() {
+            const scoreboardHtml = Object.entries(gameState.scores)
+                .sort(([,a], [,b]) => b - a)
+                .map(([player, score]) => `<div class="score-item">${player}: ${score} votes</div>`)
+                .join('');
+            
+            const existingScoreboard = document.getElementById('scoreboard');
+            if (existingScoreboard) {
+                existingScoreboard.innerHTML = `
+                    <div class="scoreboard-title">SCOREBOARD</div>
+                    ${scoreboardHtml}
+                `;
+            }
+        }
+
+        function updateGamePhaseUI() {
+            if (gameState.currentPhase === 'writing') {
+                document.getElementById('writing-phase').classList.remove('hidden');
+                document.getElementById('voting-phase').classList.add('hidden');
+                document.getElementById('phase-indicator').className = 'phase-indicator phase-writing';
+            } else if (gameState.currentPhase === 'voting') {
+                document.getElementById('writing-phase').classList.add('hidden');
+                document.getElementById('voting-phase').classList.remove('hidden');
+                document.getElementById('phase-indicator').className = 'phase-indicator phase-voting';
+                
+                // Rebuild voting options
+                const votingContainer = document.getElementById('voting-options');
+                if (gameState.votingOptions && gameState.votingOptions.length > 0) {
+                    votingContainer.innerHTML = gameState.votingOptions.map((option, index) => `
+                        <div class="option${gameState.selectedOption === index ? ' selected' : ''}" onclick="voteForOption(${index})">
+                            <div class="option-label">Option ${String.fromCharCode(65 + index)}</div>
+                            <div>${option.text}</div>
+                            <div class="vote-count">${option.votes || 0} votes</div>
+                        </div>
+                    `).join('');
+                }
+            } else {
+                document.getElementById('writing-phase').classList.add('hidden');
+                document.getElementById('voting-phase').classList.add('hidden');
+            }
+        }
+
+        function saveRoomState() {
+            if (!db || !gameState.roomId) return;
+            
+            const roomData = {
+                ...gameState,
+                submittedSentences: Array.from(gameState.submittedSentences),
+                votedParticipants: Array.from(gameState.votedParticipants),
+                lastUpdate: Date.now()
+            };
+            
+            db.ref('rooms/' + gameState.roomId).set(roomData);
+        }
+
+        function listenToRoom(roomId) {
+            if (!db) return;
+            
+            roomRef = db.ref('rooms/' + roomId);
+            roomRef.on('value', (snapshot) => {
+                const roomData = snapshot.val();
+                if (roomData) {
+                    const wasHost = gameState.isHost;
+                    const playerName = gameState.playerName;
+                    
+                    gameState = {
+                        ...roomData,
+                        submittedSentences: new Set(roomData.submittedSentences || []),
+                        votedParticipants: new Set(roomData.votedParticipants || []),
+                        isHost: wasHost,
+                        playerName: playerName
+                    };
+                    
+                    updateUI();
+                    updateScoreboard();
+                    updateGamePhaseUI();
+                    
+                    // Auto-start if enough participants
+                    if (gameState.participants.length >= 2 && gameState.currentPhase === 'waiting') {
+                        startWriting();
+                    }
+                }
+            });
+        }
+
+        function displayCompletedParagraphs() {
+            const container = document.getElementById('completed-paragraphs');
+            if (completedParagraphs.length === 0) {
+                container.innerHTML = '<div class="no-paragraphs">No paragraphs completed yet. Create a room to start writing!</div>';
+                return;
+            }
+            
+            container.innerHTML = completedParagraphs
+                .slice()
+                .reverse()
+                .map((para, index) => `
+                    <div class="completed-paragraph">
+                        <div class="paragraph-header">
+                            Paragraph #${completedParagraphs.length - index} | Room: ${para.roomId} | ${para.timestamp}
+                        </div>
+                        <div class="paragraph-text">${para.text}</div>
+                        <div class="paragraph-contributors">Contributors: ${para.contributors.join(', ')}</div>
+                    </div>
+                `).join('');
+        }
+
+        // Main functions
+        function createRoom() {
+            gameState.roomId = generateRoomId();
+            gameState.isHost = true;
+            showScreen('room-setup');
+        }
+
+        function joinRoom() {
+            const roomCode = document.getElementById('room-code').value.toUpperCase();
+            if (roomCode.length === 4) {
+                if (db) {
+                    // Check if room exists in Firebase
+                    db.ref('rooms/' + roomCode).once('value').then((snapshot) => {
+                        if (snapshot.exists()) {
+                            gameState.roomId = roomCode;
+                            gameState.isHost = false;
+                            showScreen('room-setup');
+                        } else {
+                            alert('Room not found. Please check the room code.');
+                        }
+                    });
+                } else {
+                    gameState.roomId = roomCode;
+                    gameState.isHost = false;
+                    showScreen('room-setup');
+                }
+            } else {
+                alert('Please enter a valid 4-character room code');
+            }
+        }
+
+        function toggleAnonymous() {
+            gameState.anonymousMode = !gameState.anonymousMode;
+            const toggle = event.target;
+            toggle.classList.toggle('on');
+        }
+
+        function startRoom() {
+            const nameInput = document.getElementById('player-name');
+            if (!nameInput.value.trim()) {
+                alert('Please enter your name');
+                return;
+            }
+            
+            gameState.playerName = nameInput.value.trim();
+            
+            if (gameState.isHost) {
+                // Host creates new room
+                const modeSelect = document.getElementById('mode-select');
+                const modes = { quick: 5, standard: 10, epic: 20 };
+                gameState.maxRounds = modes[modeSelect.value];
+                
+                gameState.participants = [gameState.playerName];
+                gameState.scores = {};
+                gameState.scores[gameState.playerName] = 0;
+                gameState.currentPhase = 'waiting';
+                
+                if (db) {
+                    saveRoomState();
+                }
+            } else {
+                // Player joins existing room
+                if (db) {
+                    db.ref('rooms/' + gameState.roomId).once('value').then((snapshot) => {
+                        const roomData = snapshot.val();
+                        if (roomData) {
+                            if (!roomData.participants.includes(gameState.playerName)) {
+                                roomData.participants.push(gameState.playerName);
+                                roomData.scores[gameState.playerName] = 0;
+                                
+                                gameState = {
+                                    ...roomData,
+                                    submittedSentences: new Set(roomData.submittedSentences || []),
+                                    votedParticipants: new Set(roomData.votedParticipants || []),
+                                    playerName: gameState.playerName,
+                                    isHost: false
+                                };
+                                
+                                saveRoomState();
+                            }
+                        }
+                    });
+                }
+            }
+            
+            showScreen('game-room');
+            updateUI();
+            updateScoreboard();
+            
+            if (db) {
+                listenToRoom(gameState.roomId);
+            }
+        }
+
+        function startWriting() {
+            if (gameState.participants.length < 2) return;
+            
+            gameState.currentPhase = 'writing';
+            gameState.sentences = [];
+            gameState.submittedSentences.clear();
+            
+            document.getElementById('phase-indicator').textContent = `Round ${gameState.round}: Write the next sentence`;
+            document.getElementById('phase-indicator').className = 'phase-indicator phase-writing';
+            document.getElementById('writing-phase').classList.remove('hidden');
+            document.getElementById('voting-phase').classList.add('hidden');
+            
+            document.getElementById('sentence-input').focus();
+            updateUI();
+            
+            if (db) {
+                saveRoomState();
+            }
+        }
+
+        function submitSentence() {
+            const input = document.getElementById('sentence-input');
+            const sentence = input.value.trim();
+            
+            if (!sentence) {
+                alert('Please write a sentence before submitting');
+                return;
+            }
+            
+            if (gameState.submittedSentences.has(gameState.playerName)) {
+                alert('You have already submitted a sentence for this round');
+                return;
+            }
+            
+            gameState.sentences.push({
+                text: sentence,
+                author: gameState.playerName,
+                votes: 0
+            });
+            
+            gameState.submittedSentences.add(gameState.playerName);
+            input.value = '';
+            
+            if (db) {
+                saveRoomState();
+            }
+            
+            updateUI();
+            
+            if (gameState.submittedSentences.size === gameState.participants.length) {
+                startVotingPhase();
+            } else {
+                document.getElementById('phase-indicator').textContent = `Waiting for ${gameState.participants.length - gameState.submittedSentences.size} more participants...`;
+                document.getElementById('writing-phase').classList.add('hidden');
+            }
+        }
+
+        function startVotingPhase() {
+            gameState.currentPhase = 'voting';
+            gameState.selectedOption = null;
+            gameState.votedParticipants.clear();
+            
+            document.getElementById('phase-indicator').textContent = 'Vote for the best sentence';
+            document.getElementById('phase-indicator').className = 'phase-indicator phase-voting';
+            document.getElementById('writing-phase').classList.add('hidden');
+            document.getElementById('voting-phase').classList.remove('hidden');
+            
+            gameState.votingOptions = [...gameState.sentences].sort(() => Math.random() - 0.5);
+            
+            const votingContainer = document.getElementById('voting-options');
+            votingContainer.innerHTML = gameState.votingOptions.map((option, index) => `
+                <div class="option" onclick="voteForOption(${index})">
+                    <div class="option-label">Option ${String.fromCharCode(65 + index)}</div>
+                    <div>${option.text}</div>
+                    <div class="vote-count" id="vote-count-${index}">0 votes</div>
+                </div>
+            `).join('');
+            
+            if (db) {
+                saveRoomState();
+            }
+        }
+
+        function voteForOption(index) {
+            if (gameState.selectedOption !== null) return;
+            if (gameState.votingOptions[index].author === gameState.playerName) {
+                alert("You cannot vote for your own sentence");
+                return;
+            }
+            
+            gameState.selectedOption = index;
+            gameState.votingOptions[index].votes++;
+            gameState.votedParticipants.add(gameState.playerName);
+            
+            document.querySelectorAll('.option').forEach((el, i) => {
+                if (i === index) {
+                    el.classList.add('selected');
+                }
+                el.style.pointerEvents = 'none';
+            });
+            
+            document.getElementById(`vote-count-${index}`).textContent = 
+                `${gameState.votingOptions[index].votes} votes`;
+                
+            document.getElementById('phase-indicator').textContent = 
+                `Waiting for ${gameState.participants.length - gameState.votedParticipants.size} more votes...`;
+            
+            if (db) {
+                saveRoomState();
+            }
+            
+            if (gameState.votedParticipants.size === gameState.participants.length) {
+                setTimeout(() => {
+                    showResults();
+                }, 1500);
+            }
+        }
+
+        function showResults() {
+            const winner = gameState.votingOptions.reduce((prev, current) => 
+                (prev.votes > current.votes) ? prev : current
+            );
+            
+            if (gameState.scores[winner.author] !== undefined) {
+                gameState.scores[winner.author] += winner.votes;
+            }
+            
+            if (gameState.currentParagraph) {
+                gameState.currentParagraph += ' ' + winner.text;
+            } else {
+                gameState.currentParagraph = winner.text;
+            }
+            
+            const paragraphEl = document.getElementById('current-paragraph');
+            paragraphEl.textContent = gameState.currentParagraph;
+            
+            gameState.round++;
+            updateScoreboard();
+            
+            if (db) {
+                saveRoomState();
+            }
+            
+            if (gameState.round > gameState.maxRounds) {
+                saveParagraph();
+                startNewParagraph();
+            } else {
+                setTimeout(() => {
+                    updateUI();
+                    startWriting();
+                }, 3000);
+            }
+        }
+
+        function saveParagraph() {
+            const paragraph = {
+                text: gameState.currentParagraph,
+                roomId: gameState.roomId,
+                contributors: [...gameState.participants],
+                timestamp: new Date().toLocaleString(),
+                finalScores: { ...gameState.scores }
+            };
+            
+            completedParagraphs.push(paragraph);
+            localStorage.setItem('paragraphs', JSON.stringify(completedParagraphs));
+        }
+
+        function startNewParagraph() {
+            gameState.currentParagraph = '';
+            gameState.round = 1;
+            gameState.sentences = [];
+            gameState.submittedSentences.clear();
+            gameState.votedParticipants.clear();
+            gameState.currentPhase = 'waiting';
+            
+            document.getElementById('phase-indicator').textContent = 'Paragraph saved! Starting new paragraph...';
+            document.getElementById('writing-phase').classList.add('hidden');
+            document.getElementById('voting-phase').classList.add('hidden');
+            
+            updateUI();
+            
+            if (db) {
+                saveRoomState();
+            }
+            
+            setTimeout(() => {
+                startWriting();
+            }, 2000);
+        }
+
+        function leaveRoom() {
+            if (confirm('Are you sure you want to leave this room?')) {
+                if (roomRef) {
+                    roomRef.off();
+                    roomRef = null;
+                }
+                showScreen('main-menu');
+                displayCompletedParagraphs();
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            showScreen('main-menu');
+            displayCompletedParagraphs();
+        });
+
+        // Handle Enter key in inputs
+        document.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                if (document.activeElement.id === 'room-code') {
+                    joinRoom();
+                } else if (document.activeElement.id === 'player-name') {
+                    startRoom();
+                } else if (document.activeElement.id === 'sentence-input' && e.ctrlKey) {
+                    submitSentence();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
