@@ -498,7 +498,6 @@
                 }
             });
         } catch (error) {
-            console.log('Firebase error:', error);
             document.getElementById('connection-status').textContent = 'Error';
         }
 
@@ -622,7 +621,7 @@
             };
             
             db.ref('rooms/' + gameState.roomId).set(roomData).catch(error => {
-                console.error('Error saving room state:', error);
+                // Silent error handling
             });
         }
 
@@ -680,7 +679,7 @@
                 return;
             }
             
-            db.ref('paragraphs').once('value').then((snapshot) => {
+            db.ref('completedParagraphs').once('value').then((snapshot) => {
                 const firebaseParagraphs = snapshot.val();
                 if (firebaseParagraphs) {
                     // Convert Firebase object to array and sort by timestamp
@@ -709,7 +708,6 @@
                 
                 displayCompletedParagraphs();
             }).catch(error => {
-                console.error('Error loading paragraphs from Firebase:', error);
                 // Fallback to local storage
                 completedParagraphs = JSON.parse(localStorage.getItem('paragraphs') || '[]');
                 displayCompletedParagraphs();
@@ -989,12 +987,8 @@
             localStorage.setItem('paragraphs', JSON.stringify(completedParagraphs));
             
             // Save to Firebase (global storage)
-            if (db) {
-                db.ref('paragraphs/' + paragraph.id).set(paragraph).then(() => {
-                    console.log('Paragraph saved to Firebase');
-                }).catch(error => {
-                    console.error('Error saving paragraph to Firebase:', error);
-                });
+            if (db && connected) {
+                db.ref('completedParagraphs/' + paragraph.id).set(paragraph);
             }
         }
 
