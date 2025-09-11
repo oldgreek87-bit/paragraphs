@@ -775,6 +775,11 @@
                                 };
                                 
                                 saveRoomState();
+                                
+                                // Immediately show updated UI
+                                updateUI();
+                                updateScoreboard();
+                                updateGamePhaseUI();
                             }
                         }
                     });
