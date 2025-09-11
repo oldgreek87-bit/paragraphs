@@ -674,6 +674,48 @@
                 `).join('');
         }
 
+        function loadCompletedParagraphs() {
+            if (!db) {
+                displayCompletedParagraphs();
+                return;
+            }
+            
+            db.ref('paragraphs').once('value').then((snapshot) => {
+                const firebaseParagraphs = snapshot.val();
+                if (firebaseParagraphs) {
+                    // Convert Firebase object to array and sort by timestamp
+                    const paragraphsArray = Object.values(firebaseParagraphs)
+                        .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                    
+                    // Merge with local storage (remove duplicates by ID)
+                    const localParagraphs = JSON.parse(localStorage.getItem('paragraphs') || '[]');
+                    const allParagraphs = [...paragraphsArray];
+                    
+                    // Add local paragraphs that aren't in Firebase yet
+                    localParagraphs.forEach(localPara => {
+                        if (!paragraphsArray.find(fbPara => fbPara.id === localPara.id)) {
+                            allParagraphs.push(localPara);
+                        }
+                    });
+                    
+                    completedParagraphs = allParagraphs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+                    
+                    // Update local storage with merged data
+                    localStorage.setItem('paragraphs', JSON.stringify(completedParagraphs));
+                } else {
+                    // No paragraphs in Firebase, use local storage
+                    completedParagraphs = JSON.parse(localStorage.getItem('paragraphs') || '[]');
+                }
+                
+                displayCompletedParagraphs();
+            }).catch(error => {
+                console.error('Error loading paragraphs from Firebase:', error);
+                // Fallback to local storage
+                completedParagraphs = JSON.parse(localStorage.getItem('paragraphs') || '[]');
+                displayCompletedParagraphs();
+            });
+        }
+
         // Main functions
         function createRoom() {
             gameState.roomId = generateRoomId();
@@ -938,11 +980,22 @@
                 roomId: gameState.roomId,
                 contributors: contributors.length > 0 ? contributors : gameState.participants,
                 timestamp: new Date().toLocaleString(),
-                finalScores: { ...gameState.scores }
+                finalScores: { ...gameState.scores },
+                id: Date.now() + '_' + Math.random().toString(36).substr(2, 9)
             };
             
+            // Save to local storage (backup)
             completedParagraphs.push(paragraph);
             localStorage.setItem('paragraphs', JSON.stringify(completedParagraphs));
+            
+            // Save to Firebase (global storage)
+            if (db) {
+                db.ref('paragraphs/' + paragraph.id).set(paragraph).then(() => {
+                    console.log('Paragraph saved to Firebase');
+                }).catch(error => {
+                    console.error('Error saving paragraph to Firebase:', error);
+                });
+            }
         }
 
         function startNewParagraph() {
@@ -976,14 +1029,14 @@
                     roomRef = null;
                 }
                 showScreen('main-menu');
-                displayCompletedParagraphs();
+                loadCompletedParagraphs();
             }
         }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             showScreen('main-menu');
-            displayCompletedParagraphs(); // Show empty state initially
+            loadCompletedParagraphs();
         });
 
         // Handle Enter key in inputs
