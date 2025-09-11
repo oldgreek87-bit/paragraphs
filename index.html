@@ -594,14 +594,14 @@
                 document.getElementById('phase-indicator').className = 'phase-indicator phase-voting';
                 document.getElementById('phase-indicator').textContent = 'Vote for the best sentence';
                 
-                // Rebuild voting options
+                // Rebuild voting options with proper IDs
                 const votingContainer = document.getElementById('voting-options');
                 if (gameState.votingOptions && gameState.votingOptions.length > 0) {
                     votingContainer.innerHTML = gameState.votingOptions.map((option, index) => `
                         <div class="option${gameState.selectedOption === index ? ' selected' : ''}" onclick="voteForOption(${index})">
                             <div class="option-label">Option ${String.fromCharCode(65 + index)}</div>
                             <div>${option.text}</div>
-                            <div class="vote-count">${option.votes || 0} votes</div>
+                            <div class="vote-count" id="vote-count-${index}">${option.votes || 0} votes</div>
                         </div>
                     `).join('');
                 }
