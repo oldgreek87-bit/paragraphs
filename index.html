@@ -635,13 +635,15 @@
                 if (roomData) {
                     const wasHost = gameState.isHost;
                     const playerName = gameState.playerName;
+                    const currentSelectedOption = gameState.selectedOption;
                     
                     gameState = {
                         ...roomData,
                         submittedSentences: new Set(roomData.submittedSentences || []),
                         votedParticipants: new Set(roomData.votedParticipants || []),
                         isHost: wasHost,
-                        playerName: playerName
+                        playerName: playerName,
+                        selectedOption: gameState.votedParticipants.has(playerName) ? currentSelectedOption : null
                     };
                     
                     updateUI();
