@@ -833,6 +833,7 @@
             
             gameState.votingOptions = [...gameState.sentences].sort(() => Math.random() - 0.5);
             
+            // Don't create voting elements here - let updateGamePhaseUI() handle it
             updateGamePhaseUI();
             saveRoomState();
         }
