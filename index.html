@@ -537,7 +537,7 @@
 
         function debug(msg) {
             console.log(msg);
-            document.getElementById('debug').textContent = msg;
+            document.getElementById('debug').innerHTML = `${msg}<br>Participants: ${gameState.participants.join(', ')}<br>Phase: ${gameState.currentPhase}<br>Host: ${gameState.isHost}`;
         }
 
         // Utility functions
