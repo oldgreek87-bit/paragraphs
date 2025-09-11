@@ -848,6 +848,7 @@
             gameState.votingOptions[index].votes = (gameState.votingOptions[index].votes || 0) + 1;
             gameState.votedParticipants.add(gameState.playerName);
             
+            // Update UI
             document.querySelectorAll('.option').forEach((el, i) => {
                 if (i === index) {
                     el.classList.add('selected');
@@ -855,16 +856,22 @@
                 el.style.pointerEvents = 'none';
             });
             
+            // Update vote count display
+            document.getElementById(`vote-count-${index}`).textContent = 
+                `${gameState.votingOptions[index].votes} votes`;
+            
             document.getElementById('phase-indicator').textContent = 
                 `Waiting for ${gameState.participants.length - gameState.votedParticipants.size} more votes...`;
             
+            // Save to Firebase
             saveRoomState();
             
-            if (gameState.votedParticipants.size === gameState.participants.length) {
-                setTimeout(() => {
+            // Check if everyone voted (with timeout to ensure Firebase sync)
+            setTimeout(() => {
+                if (gameState.votedParticipants.size === gameState.participants.length) {
                     showResults();
-                }, 1500);
-            }
+                }
+            }, 100);
         }
 
         function showResults() {
