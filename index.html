@@ -353,22 +353,10 @@
             background: #000;
             color: #fff;
         }
-
-        .debug {
-            position: fixed;
-            bottom: 10px;
-            left: 10px;
-            padding: 5px;
-            background: #fff;
-            border: 1px solid #000;
-            font-size: 10px;
-            max-width: 200px;
-        }
     </style>
 </head>
 <body>
     <div class="connection-status" id="connection-status">Connecting...</div>
-    <div class="debug" id="debug">Debug info</div>
     
     <div class="container">
         <!-- Main Menu -->
@@ -432,12 +420,12 @@
             
             <div class="paragraph-box">
                 <div class="paragraph-text" id="current-paragraph">
-                    Share room code with participants. Need at least 2 people to start.
+                    Share room code with participants. Need at least 3 people to start.
                 </div>
             </div>
             
             <div class="phase-indicator" id="phase-indicator">
-                Share room code with participants. Need at least 2 people to start.
+                Share room code with participants. Need at least 3 people to start.
             </div>
             
             <div class="participants" id="participants-list">
@@ -465,6 +453,7 @@
             
             <!-- Controls -->
             <div style="text-align: center; margin-top: 20px;">
+                <button class="btn" id="start-btn" onclick="startWriting()" style="display: none;">START WRITING</button>
                 <button class="btn" onclick="leaveRoom()">LEAVE ROOM</button>
             </div>
         </div>
@@ -479,7 +468,7 @@
         const firebaseConfig = {
             apiKey: "AIzaSyCq0zaZKpWj1cWmiu-pqiHo4MuLmA9xZkc",
             authDomain: "paragraphs-e9d60.firebaseapp.com",
-            databaseURL: "https://paragraphs-e9d60-default-rtdb.firebaseio.com",
+            databaseURL: "https://paragraphs-e9d60-default-rtdb.firebaseio.com/",
             projectId: "paragraphs-e9d60",
             storageBucket: "paragraphs-e9d60.firebasestorage.app",
             messagingSenderId: "116355067615",
@@ -527,18 +516,13 @@
             maxRounds: 10,
             anonymousMode: false,
             scores: {},
-            submittedSentences: [],
-            votedParticipants: [],
+            submittedSentences: new Set(),
+            votedParticipants: new Set(),
             isHost: false
         };
 
         let roomRef = null;
         let completedParagraphs = JSON.parse(localStorage.getItem('paragraphs') || '[]');
-
-        function debug(msg) {
-            console.log(msg);
-            document.getElementById('debug').innerHTML = `${msg}<br>Participants: ${gameState.participants.join(', ')}<br>Phase: ${gameState.currentPhase}<br>Host: ${gameState.isHost}`;
-        }
 
         // Utility functions
         function generateRoomId() {
@@ -555,19 +539,31 @@
             document.getElementById('participant-count').textContent = gameState.participants.length;
             document.getElementById('round-number').textContent = gameState.round;
             document.getElementById('max-rounds').textContent = gameState.maxRounds;
-            document.getElementById('current-paragraph').textContent = gameState.currentParagraph || 'Share room code with participants. Need at least 2 people to start.';
+            document.getElementById('current-paragraph').textContent = gameState.currentParagraph || 'Share room code with participants. Need at least 3 people to start.';
             
             // Update participants list
             const participantsList = document.getElementById('participants-list');
             participantsList.innerHTML = gameState.participants.map(p => {
-                const hasSubmitted = gameState.submittedSentences.includes(p);
+                const hasSubmitted = gameState.submittedSentences.has(p);
                 const isCurrentPlayer = p === gameState.playerName;
                 return `<div class="participant${hasSubmitted ? ' ready' : ''}${isCurrentPlayer ? ' current-player' : ''}">${p}</div>`;
             }).join('');
             
-            // Show room code if less than 2 participants
-            if (gameState.participants.length < 2) {
-                document.getElementById('phase-indicator').textContent = `Share room code: ${gameState.roomId} - Need ${2 - gameState.participants.length} more participant(s)`;
+            // Update phase indicator and start button
+            const startBtn = document.getElementById('start-btn');
+            if (gameState.currentPhase === 'waiting') {
+                if (gameState.participants.length < 3) {
+                    document.getElementById('phase-indicator').textContent = `Share room code: ${gameState.roomId} - Need ${3 - gameState.participants.length} more participant(s) (minimum 3)`;
+                    startBtn.style.display = 'none';
+                } else if (gameState.isHost) {
+                    document.getElementById('phase-indicator').textContent = `${gameState.participants.length} participants ready. Click START WRITING when ready.`;
+                    startBtn.style.display = 'inline-block';
+                } else {
+                    document.getElementById('phase-indicator').textContent = `Waiting for host to start the game...`;
+                    startBtn.style.display = 'none';
+                }
+            } else {
+                startBtn.style.display = 'none';
             }
         }
 
@@ -587,8 +583,6 @@
         }
 
         function updateGamePhaseUI() {
-            debug(`Phase: ${gameState.currentPhase}, Participants: ${gameState.participants.length}`);
-            
             if (gameState.currentPhase === 'writing') {
                 document.getElementById('writing-phase').classList.remove('hidden');
                 document.getElementById('voting-phase').classList.add('hidden');
@@ -620,10 +614,10 @@
         function saveRoomState() {
             if (!db || !gameState.roomId) return;
             
-            debug(`Saving state: ${gameState.currentPhase}`);
-            
             const roomData = {
                 ...gameState,
+                submittedSentences: Array.from(gameState.submittedSentences),
+                votedParticipants: Array.from(gameState.votedParticipants),
                 lastUpdate: Date.now()
             };
             
@@ -639,13 +633,13 @@
             roomRef.on('value', (snapshot) => {
                 const roomData = snapshot.val();
                 if (roomData) {
-                    debug(`Received update: ${roomData.currentPhase}`);
-                    
                     const wasHost = gameState.isHost;
                     const playerName = gameState.playerName;
                     
                     gameState = {
                         ...roomData,
+                        submittedSentences: new Set(roomData.submittedSentences || []),
+                        votedParticipants: new Set(roomData.votedParticipants || []),
                         isHost: wasHost,
                         playerName: playerName
                     };
@@ -653,21 +647,6 @@
                     updateUI();
                     updateScoreboard();
                     updateGamePhaseUI();
-                    
-                    // Show start button only for host in waiting phase
-                    const startBtn = document.getElementById('start-btn');
-                    if (gameState.isHost && gameState.currentPhase === 'waiting') {
-                        startBtn.style.display = 'inline-block';
-                    } else {
-                        startBtn.style.display = 'none';
-                    }
-                    
-                    // Auto-start if enough participants and waiting
-                    if (gameState.participants.length >= 2 && gameState.currentPhase === 'waiting') {
-                        setTimeout(() => {
-                            startWriting();
-                        }, 1000);
-                    }
                 }
             });
         }
@@ -704,7 +683,6 @@
             const roomCode = document.getElementById('room-code').value.toUpperCase();
             if (roomCode.length === 4) {
                 if (db) {
-                    // Check if room exists in Firebase
                     db.ref('rooms/' + roomCode).once('value').then((snapshot) => {
                         if (snapshot.exists()) {
                             gameState.roomId = roomCode;
@@ -749,12 +727,6 @@
                 gameState.scores = {};
                 gameState.scores[gameState.playerName] = 0;
                 gameState.currentPhase = 'waiting';
-                gameState.submittedSentences = [];
-                gameState.votedParticipants = [];
-                gameState.sentences = [];
-                gameState.votingOptions = [];
-                gameState.currentParagraph = '';
-                gameState.round = 1;
                 
                 saveRoomState();
             } else {
@@ -770,16 +742,13 @@
                                 
                                 gameState = {
                                     ...roomData,
+                                    submittedSentences: new Set(roomData.submittedSentences || []),
+                                    votedParticipants: new Set(roomData.votedParticipants || []),
                                     playerName: gameState.playerName,
                                     isHost: false
                                 };
                                 
                                 saveRoomState();
-                                
-                                // Immediately show updated UI
-                                updateUI();
-                                updateScoreboard();
-                                updateGamePhaseUI();
                             }
                         }
                     });
@@ -796,14 +765,15 @@
         }
 
         function startWriting() {
-            if (gameState.participants.length < 2) return;
-            if (gameState.currentPhase === 'writing') return; // Already in writing phase
-            
-            debug('Starting writing phase');
+            if (gameState.participants.length < 3) {
+                alert('Need at least 3 participants to start writing');
+                return;
+            }
+            if (!gameState.isHost) return;
             
             gameState.currentPhase = 'writing';
             gameState.sentences = [];
-            gameState.submittedSentences = [];
+            gameState.submittedSentences.clear();
             gameState.votingOptions = [];
             gameState.selectedOption = null;
             
@@ -811,62 +781,48 @@
             updateUI();
             saveRoomState();
             
-            setTimeout(() => {
-                document.getElementById('sentence-input').focus();
-            }, 100);
+            document.getElementById('sentence-input').focus();
         }
 
         function submitSentence() {
             const input = document.getElementById('sentence-input');
             const sentence = input.value.trim();
             
-            debug(`Submit attempt: "${sentence}"`);
-            
             if (!sentence) {
                 alert('Please write a sentence before submitting');
                 return;
             }
             
-            if (gameState.submittedSentences.includes(gameState.playerName)) {
+            if (gameState.submittedSentences.has(gameState.playerName)) {
                 alert('You have already submitted a sentence for this round');
                 return;
             }
             
-            // Add user's sentence
-            gameState.sentences = gameState.sentences || [];
             gameState.sentences.push({
                 text: sentence,
                 author: gameState.playerName,
                 votes: 0
             });
             
-            gameState.submittedSentences.push(gameState.playerName);
+            gameState.submittedSentences.add(gameState.playerName);
             input.value = '';
-            
-            debug(`Submitted. Total sentences: ${gameState.sentences.length}, Submitted by: ${gameState.submittedSentences.length}`);
             
             saveRoomState();
             updateUI();
             
-            if (gameState.submittedSentences.length === gameState.participants.length) {
-                debug('All submitted, starting voting');
-                setTimeout(() => {
-                    startVotingPhase();
-                }, 1000);
+            if (gameState.submittedSentences.size === gameState.participants.length) {
+                startVotingPhase();
             } else {
-                document.getElementById('phase-indicator').textContent = `Waiting for ${gameState.participants.length - gameState.submittedSentences.length} more participants...`;
+                document.getElementById('phase-indicator').textContent = `Waiting for ${gameState.participants.length - gameState.submittedSentences.size} more participants...`;
                 document.getElementById('writing-phase').classList.add('hidden');
             }
         }
 
         function startVotingPhase() {
-            debug('Starting voting phase');
-            
             gameState.currentPhase = 'voting';
             gameState.selectedOption = null;
-            gameState.votedParticipants = [];
+            gameState.votedParticipants.clear();
             
-            // Randomize options
             gameState.votingOptions = [...gameState.sentences].sort(() => Math.random() - 0.5);
             
             updateGamePhaseUI();
@@ -880,13 +836,10 @@
                 return;
             }
             
-            debug(`Voting for option ${index}`);
-            
             gameState.selectedOption = index;
             gameState.votingOptions[index].votes = (gameState.votingOptions[index].votes || 0) + 1;
-            gameState.votedParticipants.push(gameState.playerName);
+            gameState.votedParticipants.add(gameState.playerName);
             
-            // Update UI
             document.querySelectorAll('.option').forEach((el, i) => {
                 if (i === index) {
                     el.classList.add('selected');
@@ -895,11 +848,11 @@
             });
             
             document.getElementById('phase-indicator').textContent = 
-                `Waiting for ${gameState.participants.length - gameState.votedParticipants.length} more votes...`;
+                `Waiting for ${gameState.participants.length - gameState.votedParticipants.size} more votes...`;
             
             saveRoomState();
             
-            if (gameState.votedParticipants.length === gameState.participants.length) {
+            if (gameState.votedParticipants.size === gameState.participants.length) {
                 setTimeout(() => {
                     showResults();
                 }, 1500);
@@ -907,8 +860,6 @@
         }
 
         function showResults() {
-            debug('Showing results');
-            
             const winner = gameState.votingOptions.reduce((prev, current) => 
                 ((prev.votes || 0) > (current.votes || 0)) ? prev : current
             );
@@ -955,13 +906,11 @@
         }
 
         function startNewParagraph() {
-            debug('Starting new paragraph');
-            
             gameState.currentParagraph = '';
             gameState.round = 1;
             gameState.sentences = [];
-            gameState.submittedSentences = [];
-            gameState.votedParticipants = [];
+            gameState.submittedSentences.clear();
+            gameState.votedParticipants.clear();
             gameState.votingOptions = [];
             gameState.selectedOption = null;
             gameState.currentPhase = 'waiting';
@@ -974,7 +923,9 @@
             saveRoomState();
             
             setTimeout(() => {
-                startWriting();
+                if (gameState.isHost) {
+                    startWriting();
+                }
             }, 2000);
         }
 
