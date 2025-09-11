@@ -897,16 +897,27 @@
             
             gameState.round++;
             updateScoreboard();
-            saveRoomState();
             
             if (gameState.round > gameState.maxRounds) {
                 saveParagraph();
                 startNewParagraph();
             } else {
+                // Reset for next round
+                gameState.currentPhase = 'waiting';
+                gameState.sentences = [];
+                gameState.submittedSentences.clear();
+                gameState.votedParticipants.clear();
+                gameState.votingOptions = [];
+                gameState.selectedOption = null;
+                
+                saveRoomState();
+                updateUI();
+                
                 setTimeout(() => {
-                    updateUI();
-                    startWriting();
-                }, 3000);
+                    if (gameState.isHost) {
+                        startWriting();
+                    }
+                }, 2000);
             }
         }
 
