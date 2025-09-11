@@ -922,10 +922,21 @@
         }
 
         function saveParagraph() {
+            // Count how many sentences each author contributed
+            const authorContributions = {};
+            gameState.participants.forEach(p => authorContributions[p] = 0);
+            
+            // Go through the saved voting results to count actual contributions
+            // For now, use scores as approximation of contributions
+            const contributors = Object.entries(gameState.scores)
+                .filter(([name, score]) => score > 0)
+                .map(([name, score]) => `${name} (${Math.round(score/gameState.participants.length)} sentences)`)
+                .sort();
+            
             const paragraph = {
                 text: gameState.currentParagraph,
                 roomId: gameState.roomId,
-                contributors: [...gameState.participants],
+                contributors: contributors.length > 0 ? contributors : gameState.participants,
                 timestamp: new Date().toLocaleString(),
                 finalScores: { ...gameState.scores }
             };
