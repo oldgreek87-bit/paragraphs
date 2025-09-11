@@ -798,6 +798,8 @@
                 return;
             }
             
+            // Add sentence to local state first
+            gameState.sentences = gameState.sentences || [];
             gameState.sentences.push({
                 text: sentence,
                 author: gameState.playerName,
@@ -807,15 +809,21 @@
             gameState.submittedSentences.add(gameState.playerName);
             input.value = '';
             
+            // Save to Firebase immediately
             saveRoomState();
+            
+            // Update UI to show submission
             updateUI();
             
-            if (gameState.submittedSentences.size === gameState.participants.length) {
-                startVotingPhase();
-            } else {
-                document.getElementById('phase-indicator').textContent = `Waiting for ${gameState.participants.length - gameState.submittedSentences.size} more participants...`;
-                document.getElementById('writing-phase').classList.add('hidden');
-            }
+            // Check if all participants have submitted (use setTimeout to ensure Firebase sync)
+            setTimeout(() => {
+                if (gameState.submittedSentences.size === gameState.participants.length) {
+                    startVotingPhase();
+                } else {
+                    document.getElementById('phase-indicator').textContent = `Waiting for ${gameState.participants.length - gameState.submittedSentences.size} more participants...`;
+                    document.getElementById('writing-phase').classList.add('hidden');
+                }
+            }, 100);
         }
 
         function startVotingPhase() {
