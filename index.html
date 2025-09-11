@@ -983,7 +983,13 @@
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             showScreen('main-menu');
-            displayCompletedParagraphs();
+            
+            // Load completed paragraphs from Firebase
+            if (db) {
+                loadCompletedParagraphs();
+            } else {
+                displayCompletedParagraphs();
+            }
         });
 
         // Handle Enter key in inputs
