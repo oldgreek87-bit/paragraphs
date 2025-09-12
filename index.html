@@ -300,9 +300,11 @@
     }
 
     function showScreen(screenId) {
-        document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
-        document.getElementById(screenId).classList.remove('hidden');
-    }
+    // Safe showScreen: if the requested element doesn't exist, don't throw.
+    document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+    const el = document.getElementById(screenId);
+    if (el && el.classList) el.classList.remove('hidden');
+}
 
     function updateUI() {
         document.getElementById('room-id').textContent = gameState.roomId || 'XXXX';
@@ -807,5 +809,21 @@
     });
 
   </script>
+
+  <!-- Compatibility shim: hidden legacy DOM nodes so original JS can run without errors -->
+  <div id="legacy-dom" style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden" aria-hidden="true">
+    <div id="main-menu" class="screen hidden"></div>
+    <div id="room-setup" class="screen hidden"></div>
+    <div id="game-room" class="screen hidden"></div>
+
+    <div id="writing-phase" class="hidden">
+      <textarea id="sentence-input" class="text-input" style="width:200px;height:80px"></textarea>
+    </div>
+
+    <div id="voting-phase" class="hidden">
+      <div id="voting-options"></div>
+    </div>
+  </div>
+
 </body>
 </html>
