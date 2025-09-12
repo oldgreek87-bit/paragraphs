@@ -938,7 +938,7 @@
             gameState.votedParticipants.add(gameState.playerName);
             
             // Update UI
-            document.querySelectorAll('.option').forEach((el, i) => {
+            document.querySelectorAll('.option-zen').forEach((el, i) => {
                 if (i === index) {
                     el.classList.add('selected');
                 }
@@ -946,8 +946,10 @@
             });
             
             // Update vote count display
-            document.getElementById(`vote-count-${index}`).textContent = 
-                `${gameState.votingOptions[index].votes} votes`;
+            const voteCountEl = document.getElementById(`vote-count-${index}`);
+            if (voteCountEl) {
+                voteCountEl.textContent = `${gameState.votingOptions[index].votes} votes`;
+            }
             
             document.getElementById('phase-indicator').textContent = 
                 `Waiting for ${gameState.participants.length - gameState.votedParticipants.size} more votes...`;
@@ -978,8 +980,11 @@
                 gameState.currentParagraph = winner.text;
             }
             
-            const paragraphEl = document.getElementById('current-paragraph');
-            paragraphEl.textContent = gameState.currentParagraph;
+            // Update the zen paragraph display
+            const paragraphZen = document.getElementById('current-paragraph-zen');
+            if (paragraphZen) {
+                paragraphZen.innerHTML = gameState.currentParagraph + '<span class="typing-cursor"></span>';
+            }
             
             gameState.round++;
             updateScoreboard();
