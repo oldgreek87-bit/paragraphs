@@ -19,13 +19,16 @@
             color: #000000;
             line-height: 1.4;
             overflow-x: hidden;
+            height: 100vh;
+            margin: 0;
+            padding: 0;
         }
         
         .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            min-height: 100vh;
+            height: 100vh;
+            padding: 0;
+            margin: 0;
+            position: relative;
         }
         
         /* Main menu layout */
@@ -33,6 +36,9 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
         }
         
         .main-menu-header {
@@ -47,6 +53,268 @@
             border: 2px solid #000;
             background: #fff;
         }
+
+        /* Game Room Full-Screen Layout */
+        .game-room-layout {
+            height: 100vh;
+            display: grid;
+            grid-template-areas: 
+                "room-info . scoreboard"
+                "participants center-content phase-status"
+                "controls center-content controls-right";
+            grid-template-columns: 280px 1fr 280px;
+            grid-template-rows: auto 1fr auto;
+            gap: 20px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        /* Room Info - Top Left */
+        .room-info-panel {
+            grid-area: room-info;
+            border: 2px solid #000;
+            padding: 15px;
+            background: #fff;
+            font-size: 14px;
+            height: fit-content;
+            font-weight: bold;
+        }
+        
+        /* Scoreboard - Top Right */
+        .scoreboard-panel {
+            grid-area: scoreboard;
+            border: 2px solid #000;
+            padding: 15px;
+            background: #fff;
+            height: fit-content;
+            font-size: 14px;
+        }
+        
+        /* Participants - Left Side */
+        .participants-panel {
+            grid-area: participants;
+            border: 2px solid #000;
+            padding: 15px;
+            background: #fff;
+            align-self: start;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 14px;
+        }
+        
+        /* Center Content Area */
+        .center-content {
+            grid-area: center-content;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 0 20px;
+            position: relative;
+        }
+        
+        /* Phase Status - Right Side */
+        .phase-status-panel {
+            grid-area: phase-status;
+            border: 2px solid #000;
+            padding: 15px;
+            background: #fff;
+            align-self: start;
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+        
+        /* Controls - Bottom */
+        .controls-panel {
+            grid-area: controls;
+            text-align: left;
+            padding: 10px 0;
+        }
+        
+        .controls-right-panel {
+            grid-area: controls-right;
+            text-align: right;
+            padding: 10px 0;
+        }
+        
+        /* Main Paragraph Display */
+        .main-paragraph {
+            border: 4px solid #000;
+            background: #fff;
+            padding: 40px;
+            margin-bottom: 40px;
+            min-height: 180px;
+            width: 100%;
+            max-width: 800px;
+            font-size: 20px;
+            line-height: 1.8;
+            position: relative;
+            background-image: 
+                repeating-linear-gradient(
+                    transparent,
+                    transparent 32px,
+                    #000 32px,
+                    #000 33px
+                );
+            background-attachment: local;
+        }
+        
+        .main-paragraph::after {
+            content: '';
+            display: inline-block;
+            width: 3px;
+            height: 24px;
+            background: #000;
+            animation: blink 1s infinite;
+            margin-left: 3px;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        /* Writing Area */
+        .main-writing-area {
+            width: 100%;
+            max-width: 800px;
+            margin-bottom: 20px;
+        }
+        
+        .main-text-input {
+            width: 100%;
+            padding: 25px;
+            border: 4px solid #000;
+            font-family: inherit;
+            font-size: 18px;
+            background: #fff;
+            resize: none;
+            min-height: 120px;
+            line-height: 1.6;
+        }
+        
+        .main-text-input:focus {
+            outline: none;
+            box-shadow: inset 4px 4px 0px #000;
+        }
+        
+        /* Voting Options - Large Center Display */
+        .main-voting-options {
+            width: 100%;
+            max-width: 800px;
+            margin: 20px 0;
+        }
+        
+        .main-option {
+            border: 4px solid #000;
+            padding: 25px;
+            margin: 20px 0;
+            cursor: pointer;
+            position: relative;
+            font-size: 18px;
+            line-height: 1.6;
+            background: #fff;
+        }
+        
+        .main-option:hover {
+            background: 
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 3px,
+                    #000 3px,
+                    #000 4px
+                );
+            opacity: 0.08;
+        }
+        
+        .main-option.selected {
+            background: #000;
+            color: #fff;
+        }
+        
+        .main-option-label {
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 16px;
+            opacity: 0.7;
+        }
+        
+        .main-vote-count {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            font-size: 14px;
+            background: #fff;
+            color: #000;
+            padding: 6px 12px;
+            border: 2px solid #000;
+            font-weight: bold;
+        }
+        
+        .main-option.selected .main-vote-count {
+            background: #000;
+            color: #fff;
+            border-color: #fff;
+        }
+        
+        /* Big Action Button */
+        .big-btn {
+            background: #000;
+            color: #fff;
+            border: 4px solid #000;
+            padding: 18px 36px;
+            font-family: inherit;
+            font-size: 18px;
+            cursor: pointer;
+            margin: 15px 0;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.1s;
+            font-weight: bold;
+        }
+        
+        .big-btn:hover {
+            background: #fff;
+            color: #000;
+        }
+        
+        .big-btn:active {
+            transform: translate(2px, 2px);
+        }
+        
+        /* Compact Participants List */
+        .participants-list-compact {
+            font-size: 13px;
+        }
+        
+        .participant-compact {
+            display: block;
+            margin: 6px 0;
+            padding: 6px 10px;
+            border: 2px solid #000;
+            font-size: 12px;
+        }
+        
+        .participant-compact.ready {
+            background: #000;
+            color: #fff;
+        }
+        
+        .participant-compact.current-player {
+            background: 
+                repeating-linear-gradient(
+                    45deg,
+                    transparent,
+                    transparent 2px,
+                    #000 2px,
+                    #000 3px
+                );
+            background-size: 6px 6px;
+            opacity: 0.15;
+        }
         
         /* Pinterest-style grid for paragraphs */
         .paragraphs-grid {
@@ -55,15 +323,89 @@
             margin-top: 20px;
         }
         
+        @media (max-width: 1200px) {
+            .game-room-layout {
+                grid-template-columns: 240px 1fr 240px;
+                gap: 15px;
+                padding: 15px;
+            }
+            
+            .main-paragraph {
+                font-size: 18px;
+                padding: 30px;
+            }
+            
+            .main-text-input {
+                font-size: 16px;
+                padding: 20px;
+            }
+            
+            .main-option {
+                font-size: 16px;
+                padding: 20px;
+            }
+        }
+        
         @media (max-width: 900px) {
             .paragraphs-grid {
                 columns: 2;
+            }
+            
+            .game-room-layout {
+                grid-template-areas: 
+                    "room-info scoreboard"
+                    "center-content center-content"
+                    "participants phase-status"
+                    "controls controls-right";
+                grid-template-columns: 1fr 1fr;
+                grid-template-rows: auto 1fr auto auto;
+            }
+            
+            .participants-panel,
+            .phase-status-panel {
+                max-height: 200px;
             }
         }
         
         @media (max-width: 600px) {
             .paragraphs-grid {
                 columns: 1;
+            }
+            
+            .game-room-layout {
+                grid-template-areas: 
+                    "room-info"
+                    "scoreboard"
+                    "center-content"
+                    "participants"
+                    "phase-status"
+                    "controls";
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto 1fr auto auto auto;
+                gap: 10px;
+                padding: 10px;
+            }
+            
+            .controls-right-panel {
+                display: none;
+            }
+            
+            .main-paragraph {
+                font-size: 16px;
+                padding: 20px;
+                min-height: 120px;
+            }
+            
+            .main-text-input {
+                font-size: 14px;
+                padding: 15px;
+                min-height: 80px;
+            }
+            
+            .main-option {
+                font-size: 14px;
+                padding: 15px;
+                margin: 10px 0;
             }
         }
         
@@ -386,11 +728,21 @@
             border: 1px solid #000;
             background: #fff;
             font-size: 12px;
+            z-index: 1000;
         }
 
         .connection-status.connected {
             background: #000;
             color: #fff;
+        }
+        
+        /* Hide old layout elements in game room */
+        #game-room .room-info,
+        #game-room .paragraph-box,
+        #game-room .phase-indicator,
+        #game-room .participants,
+        #game-room #scoreboard {
+            display: none;
         }
     </style>
 </head>
@@ -425,62 +777,123 @@
 
         <!-- Room Setup -->
         <div id="room-setup" class="screen hidden">
-            <div class="header">
-                <div class="logo">ROOM SETUP</div>
-            </div>
-            
-            <div class="room-settings">
-                <div class="settings-row">
-                    <span>Mode:</span>
-                    <select id="mode-select" style="border: 2px solid #000; padding: 5px; font-family: inherit;">
-                        <option value="quick">Quick (5 sentences)</option>
-                        <option value="standard" selected>Standard (10 sentences)</option>
-                        <option value="epic">Epic (20 sentences)</option>
-                    </select>
+            <div style="max-width: 600px; margin: 0 auto; padding: 40px 20px;">
+                <div class="header">
+                    <div class="logo">ROOM SETUP</div>
                 </div>
                 
-                <div class="settings-row">
-                    <span>Anonymous mode:</span>
-                    <div class="toggle" onclick="toggleAnonymous()"></div>
+                <div class="room-settings">
+                    <div class="settings-row">
+                        <span>Mode:</span>
+                        <select id="mode-select" style="border: 2px solid #000; padding: 5px; font-family: inherit;">
+                            <option value="quick">Quick (5 sentences)</option>
+                            <option value="standard" selected>Standard (10 sentences)</option>
+                            <option value="epic">Epic (20 sentences)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="settings-row">
+                        <span>Anonymous mode:</span>
+                        <div class="toggle" onclick="toggleAnonymous()"></div>
+                    </div>
                 </div>
-            </div>
-            
-            <div style="margin: 20px 0;">
-                <input type="text" id="player-name" placeholder="Enter your name..." style="width: 100%; padding: 10px; border: 2px solid #000; font-family: inherit; margin-bottom: 10px;">
-                <div style="text-align: center;">
-                    <button class="btn" onclick="startRoom()">JOIN ROOM</button>
+                
+                <div style="margin: 20px 0;">
+                    <input type="text" id="player-name" placeholder="Enter your name..." style="width: 100%; padding: 10px; border: 2px solid #000; font-family: inherit; margin-bottom: 10px;">
+                    <div style="text-align: center;">
+                        <button class="btn" onclick="startRoom()">JOIN ROOM</button>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Game Room -->
         <div id="game-room" class="screen hidden">
-            <div class="room-info">
-                <strong>Room: <span id="room-id">XXXX</span></strong> | 
-                Participants: <span id="participant-count">1</span> | 
-                Round: <span id="round-number">1</span>/<span id="max-rounds">10</span>
+            <div class="game-room-layout">
+                <!-- Room Info - Top Left -->
+                <div class="room-info-panel">
+                    <div>ROOM: <span id="room-id">XXXX</span></div>
+                    <div>ROUND: <span id="round-number">1</span>/<span id="max-rounds">10</span></div>
+                </div>
+                
+                <!-- Scoreboard - Top Right -->
+                <div class="scoreboard-panel" id="scoreboard-main">
+                    <div style="font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #000; padding-bottom: 5px;">SCOREBOARD</div>
+                </div>
+                
+                <!-- Participants - Left Side -->
+                <div class="participants-panel">
+                    <div style="font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #000; padding-bottom: 5px;">PARTICIPANTS (<span id="participant-count">1</span>)</div>
+                    <div id="participants-list-main" class="participants-list-compact">
+                        <!-- Participants will be shown here -->
+                    </div>
+                </div>
+                
+                <!-- Phase Status - Right Side -->
+                <div class="phase-status-panel" id="phase-indicator-main">
+                    Share room code with participants. Need at least 3 people to start.
+                </div>
+                
+                <!-- Center Content -->
+                <div class="center-content">
+                    <!-- Main Paragraph Display -->
+                    <div class="main-paragraph" id="current-paragraph-main">
+                        Share room code with participants. Need at least 3 people to start.
+                    </div>
+                    
+                    <!-- Writing Phase -->
+                    <div id="writing-phase-main" class="main-writing-area hidden">
+                        <textarea class="main-text-input" id="sentence-input-main" placeholder="Write the next sentence..."></textarea>
+                        <div style="text-align: center; margin-top: 15px;">
+                            <button class="big-btn" onclick="submitSentence()">SUBMIT SENTENCE</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Voting Phase -->
+                    <div id="voting-phase-main" class="main-voting-options hidden">
+                        <!-- Options will be populated here -->
+                    </div>
+                </div>
+                
+                <!-- Controls - Bottom Left -->
+                <div class="controls-panel">
+                    <button class="btn" id="start-btn-main" onclick="startWriting()" style="display: none;">START WRITING</button>
+                    <button class="btn" onclick="leaveRoom()">LEAVE ROOM</button>
+                </div>
+                
+                <!-- Controls Right - Bottom Right -->
+                <div class="controls-right-panel">
+                    <!-- Additional controls can go here -->
+                </div>
             </div>
             
-            <div class="paragraph-box">
+            <!-- Hidden old elements for compatibility -->
+            <div class="room-info" style="display: none;">
+                <strong>Room: <span id="room-id-old">XXXX</span></strong> | 
+                Participants: <span id="participant-count-old">1</span> | 
+                Round: <span id="round-number-old">1</span>/<span id="max-rounds-old">10</span>
+            </div>
+            
+            <div class="paragraph-box" style="display: none;">
                 <div class="paragraph-text" id="current-paragraph">
                     Share room code with participants. Need at least 3 people to start.
                 </div>
             </div>
             
-            <div class="phase-indicator" id="phase-indicator">
+            <div class="phase-indicator" id="phase-indicator" style="display: none;">
                 Share room code with participants. Need at least 3 people to start.
             </div>
             
-            <div class="participants" id="participants-list">
+            <div class="participants" id="participants-list" style="display: none;">
                 <!-- Participants will be shown here -->
             </div>
             
-            <div id="scoreboard" style="margin: 15px 0; padding: 10px; border: 1px solid #000; background: #fff;">
+            <div id="scoreboard" style="display: none; margin: 15px 0; padding: 10px; border: 1px solid #000; background: #fff;">
                 <div class="scoreboard-title">SCOREBOARD</div>
             </div>
             
             <!-- Writing Phase -->
-            <div id="writing-phase" class="input-area hidden">
+            <div id="writing-phase" class="input-area hidden" style="display: none;">
                 <textarea class="text-input" id="sentence-input" placeholder="Write the next sentence..."></textarea>
                 <div style="text-align: center; margin-top: 10px;">
                     <button class="btn" onclick="submitSentence()">SUBMIT</button>
@@ -488,16 +901,10 @@
             </div>
             
             <!-- Voting Phase -->
-            <div id="voting-phase" class="hidden">
+            <div id="voting-phase" class="hidden" style="display: none;">
                 <div class="voting-options" id="voting-options">
                     <!-- Options will be populated here -->
                 </div>
-            </div>
-            
-            <!-- Controls -->
-            <div style="text-align: center; margin-top: 20px;">
-                <button class="btn" id="start-btn" onclick="startWriting()" style="display: none;">START WRITING</button>
-                <button class="btn" onclick="leaveRoom()">LEAVE ROOM</button>
             </div>
         </div>
     </div>
@@ -577,36 +984,68 @@
         }
 
         function updateUI() {
+            // Update room info
             document.getElementById('room-id').textContent = gameState.roomId || 'XXXX';
             document.getElementById('participant-count').textContent = gameState.participants.length;
             document.getElementById('round-number').textContent = gameState.round;
             document.getElementById('max-rounds').textContent = gameState.maxRounds;
             document.getElementById('current-paragraph').textContent = gameState.currentParagraph || 'Share room code with participants. Need at least 3 people to start.';
             
-            // Update participants list
+            // Update new main elements
+            const currentParagraphMain = document.getElementById('current-paragraph-main');
+            if (currentParagraphMain) {
+                currentParagraphMain.textContent = gameState.currentParagraph || 'Share room code with participants. Need at least 3 people to start.';
+            }
+            
+            // Update participants list (old)
             const participantsList = document.getElementById('participants-list');
-            participantsList.innerHTML = gameState.participants.map(p => {
-                const hasSubmitted = gameState.submittedSentences.has(p);
-                const isCurrentPlayer = p === gameState.playerName;
-                return `<div class="participant${hasSubmitted ? ' ready' : ''}${isCurrentPlayer ? ' current-player' : ''}">${p}</div>`;
-            }).join('');
+            if (participantsList) {
+                participantsList.innerHTML = gameState.participants.map(p => {
+                    const hasSubmitted = gameState.submittedSentences.has(p);
+                    const isCurrentPlayer = p === gameState.playerName;
+                    return `<div class="participant${hasSubmitted ? ' ready' : ''}${isCurrentPlayer ? ' current-player' : ''}">${p}</div>`;
+                }).join('');
+            }
+            
+            // Update participants list (new)
+            const participantsListMain = document.getElementById('participants-list-main');
+            if (participantsListMain) {
+                participantsListMain.innerHTML = gameState.participants.map(p => {
+                    const hasSubmitted = gameState.submittedSentences.has(p);
+                    const isCurrentPlayer = p === gameState.playerName;
+                    return `<div class="participant-compact${hasSubmitted ? ' ready' : ''}${isCurrentPlayer ? ' current-player' : ''}">${p}</div>`;
+                }).join('');
+            }
             
             // Update phase indicator and start button
             const startBtn = document.getElementById('start-btn');
+            const startBtnMain = document.getElementById('start-btn-main');
+            const phaseIndicator = document.getElementById('phase-indicator');
+            const phaseIndicatorMain = document.getElementById('phase-indicator-main');
+            
+            let phaseText = '';
+            let showStartBtn = false;
+            
             if (gameState.currentPhase === 'waiting') {
                 if (gameState.participants.length < 3) {
-                    document.getElementById('phase-indicator').textContent = `Share room code: ${gameState.roomId} - Need ${3 - gameState.participants.length} more participant(s) (minimum 3)`;
-                    startBtn.style.display = 'none';
+                    phaseText = `Share room code: ${gameState.roomId} - Need ${3 - gameState.participants.length} more participant(s) (minimum 3)`;
+                    showStartBtn = false;
                 } else if (gameState.isHost) {
-                    document.getElementById('phase-indicator').textContent = `${gameState.participants.length} participants ready. Click START WRITING when ready.`;
-                    startBtn.style.display = 'inline-block';
+                    phaseText = `${gameState.participants.length} participants ready. Click START WRITING when ready.`;
+                    showStartBtn = true;
                 } else {
-                    document.getElementById('phase-indicator').textContent = `Waiting for host to start the game...`;
-                    startBtn.style.display = 'none';
+                    phaseText = `Waiting for host to start the game...`;
+                    showStartBtn = false;
                 }
             } else {
-                startBtn.style.display = 'none';
+                showStartBtn = false;
             }
+            
+            if (phaseIndicator) phaseIndicator.textContent = phaseText;
+            if (phaseIndicatorMain) phaseIndicatorMain.textContent = phaseText;
+            
+            if (startBtn) startBtn.style.display = showStartBtn ? 'inline-block' : 'none';
+            if (startBtnMain) startBtnMain.style.display = showStartBtn ? 'inline-block' : 'none';
         }
 
         function updateScoreboard() {
@@ -615,6 +1054,7 @@
                 .map(([player, score]) => `<div class="score-item">${player}: ${score} votes</div>`)
                 .join('');
             
+            // Update old scoreboard
             const existingScoreboard = document.getElementById('scoreboard');
             if (existingScoreboard) {
                 existingScoreboard.innerHTML = `
@@ -622,23 +1062,65 @@
                     ${scoreboardHtml}
                 `;
             }
+            
+            // Update new main scoreboard
+            const mainScoreboard = document.getElementById('scoreboard-main');
+            if (mainScoreboard) {
+                mainScoreboard.innerHTML = `
+                    <div style="font-weight: bold; margin-bottom: 10px; border-bottom: 1px solid #000; padding-bottom: 5px;">SCOREBOARD</div>
+                    ${scoreboardHtml}
+                `;
+            }
         }
 
         function updateGamePhaseUI() {
             if (gameState.currentPhase === 'writing') {
+                // Show writing phase (old)
                 document.getElementById('writing-phase').classList.remove('hidden');
                 document.getElementById('voting-phase').classList.add('hidden');
-                document.getElementById('phase-indicator').className = 'phase-indicator phase-writing';
-                document.getElementById('phase-indicator').textContent = `Round ${gameState.round}: Write the next sentence`;
+                
+                // Show writing phase (new)
+                const writingPhaseMain = document.getElementById('writing-phase-main');
+                const votingPhaseMain = document.getElementById('voting-phase-main');
+                if (writingPhaseMain) writingPhaseMain.classList.remove('hidden');
+                if (votingPhaseMain) votingPhaseMain.classList.add('hidden');
+                
+                // Update phase indicators
+                const phaseIndicators = [document.getElementById('phase-indicator'), document.getElementById('phase-indicator-main')];
+                phaseIndicators.forEach(indicator => {
+                    if (indicator) {
+                        indicator.className = indicator.className.replace(/phase-\w+/g, '') + ' phase-writing';
+                        indicator.textContent = `Round ${gameState.round}: Write the next sentence`;
+                    }
+                });
+                
+                // Focus on the new input
+                const sentenceInputMain = document.getElementById('sentence-input-main');
+                if (sentenceInputMain) sentenceInputMain.focus();
+                
             } else if (gameState.currentPhase === 'voting') {
+                // Hide writing phase (old)
                 document.getElementById('writing-phase').classList.add('hidden');
                 document.getElementById('voting-phase').classList.remove('hidden');
-                document.getElementById('phase-indicator').className = 'phase-indicator phase-voting';
-                document.getElementById('phase-indicator').textContent = 'Vote for the best sentence';
                 
-                // Rebuild voting options with proper IDs
+                // Hide writing phase (new)
+                const writingPhaseMain = document.getElementById('writing-phase-main');
+                const votingPhaseMain = document.getElementById('voting-phase-main');
+                if (writingPhaseMain) writingPhaseMain.classList.add('hidden');
+                if (votingPhaseMain) votingPhaseMain.classList.remove('hidden');
+                
+                // Update phase indicators
+                const phaseIndicators = [document.getElementById('phase-indicator'), document.getElementById('phase-indicator-main')];
+                phaseIndicators.forEach(indicator => {
+                    if (indicator) {
+                        indicator.className = indicator.className.replace(/phase-\w+/g, '') + ' phase-voting';
+                        indicator.textContent = 'Vote for the best sentence';
+                    }
+                });
+                
+                // Rebuild voting options (old)
                 const votingContainer = document.getElementById('voting-options');
-                if (gameState.votingOptions && gameState.votingOptions.length > 0) {
+                if (gameState.votingOptions && gameState.votingOptions.length > 0 && votingContainer) {
                     votingContainer.innerHTML = gameState.votingOptions.map((option, index) => `
                         <div class="option${gameState.selectedOption === index ? ' selected' : ''}" onclick="voteForOption(${index})">
                             <div class="option-label">Option ${String.fromCharCode(65 + index)}</div>
@@ -647,9 +1129,27 @@
                         </div>
                     `).join('');
                 }
+                
+                // Rebuild voting options (new)
+                if (gameState.votingOptions && gameState.votingOptions.length > 0 && votingPhaseMain) {
+                    votingPhaseMain.innerHTML = gameState.votingOptions.map((option, index) => `
+                        <div class="main-option${gameState.selectedOption === index ? ' selected' : ''}" onclick="voteForOption(${index})">
+                            <div class="main-option-label">Option ${String.fromCharCode(65 + index)}</div>
+                            <div>${option.text}</div>
+                            <div class="main-vote-count" id="main-vote-count-${index}">${option.votes || 0} votes</div>
+                        </div>
+                    `).join('');
+                }
+                
             } else {
+                // Hide both phases
                 document.getElementById('writing-phase').classList.add('hidden');
                 document.getElementById('voting-phase').classList.add('hidden');
+                
+                const writingPhaseMain = document.getElementById('writing-phase-main');
+                const votingPhaseMain = document.getElementById('voting-phase-main');
+                if (writingPhaseMain) writingPhaseMain.classList.add('hidden');
+                if (votingPhaseMain) votingPhaseMain.classList.add('hidden');
             }
         }
 
@@ -869,12 +1369,21 @@
             updateUI();
             saveRoomState();
             
-            document.getElementById('sentence-input').focus();
+            // Focus on the appropriate input field
+            const sentenceInput = document.getElementById('sentence-input');
+            const sentenceInputMain = document.getElementById('sentence-input-main');
+            
+            if (sentenceInputMain && !sentenceInputMain.classList.contains('hidden')) {
+                sentenceInputMain.focus();
+            } else if (sentenceInput) {
+                sentenceInput.focus();
+            }
         }
 
         function submitSentence() {
             const input = document.getElementById('sentence-input');
-            const sentence = input.value.trim();
+            const inputMain = document.getElementById('sentence-input-main');
+            const sentence = (inputMain && inputMain.value.trim()) || (input && input.value.trim()) || '';
             
             if (!sentence) {
                 alert('Please write a sentence before submitting');
@@ -895,7 +1404,10 @@
             });
             
             gameState.submittedSentences.add(gameState.playerName);
-            input.value = '';
+            
+            // Clear both input fields
+            if (input) input.value = '';
+            if (inputMain) inputMain.value = '';
             
             // Save to Firebase immediately
             saveRoomState();
@@ -908,8 +1420,15 @@
                 if (gameState.submittedSentences.size === gameState.participants.length) {
                     startVotingPhase();
                 } else {
-                    document.getElementById('phase-indicator').textContent = `Waiting for ${gameState.participants.length - gameState.submittedSentences.size} more participants...`;
+                    const phaseText = `Waiting for ${gameState.participants.length - gameState.submittedSentences.size} more participants...`;
+                    const phaseIndicator = document.getElementById('phase-indicator');
+                    const phaseIndicatorMain = document.getElementById('phase-indicator-main');
+                    if (phaseIndicator) phaseIndicator.textContent = phaseText;
+                    if (phaseIndicatorMain) phaseIndicatorMain.textContent = phaseText;
+                    
                     document.getElementById('writing-phase').classList.add('hidden');
+                    const writingPhaseMain = document.getElementById('writing-phase-main');
+                    if (writingPhaseMain) writingPhaseMain.classList.add('hidden');
                 }
             }, 100);
         }
@@ -937,7 +1456,7 @@
             gameState.votingOptions[index].votes = (gameState.votingOptions[index].votes || 0) + 1;
             gameState.votedParticipants.add(gameState.playerName);
             
-            // Update UI
+            // Update UI for both old and new interfaces
             document.querySelectorAll('.option').forEach((el, i) => {
                 if (i === index) {
                     el.classList.add('selected');
@@ -945,12 +1464,27 @@
                 el.style.pointerEvents = 'none';
             });
             
-            // Update vote count display
-            document.getElementById(`vote-count-${index}`).textContent = 
-                `${gameState.votingOptions[index].votes} votes`;
+            document.querySelectorAll('.main-option').forEach((el, i) => {
+                if (i === index) {
+                    el.classList.add('selected');
+                }
+                el.style.pointerEvents = 'none';
+            });
             
-            document.getElementById('phase-indicator').textContent = 
-                `Waiting for ${gameState.participants.length - gameState.votedParticipants.size} more votes...`;
+            // Update vote count displays
+            const voteCountEl = document.getElementById(`vote-count-${index}`);
+            const mainVoteCountEl = document.getElementById(`main-vote-count-${index}`);
+            const votes = gameState.votingOptions[index].votes;
+            
+            if (voteCountEl) voteCountEl.textContent = `${votes} votes`;
+            if (mainVoteCountEl) mainVoteCountEl.textContent = `${votes} votes`;
+            
+            const waitingText = `Waiting for ${gameState.participants.length - gameState.votedParticipants.size} more votes...`;
+            const phaseIndicator = document.getElementById('phase-indicator');
+            const phaseIndicatorMain = document.getElementById('phase-indicator-main');
+            
+            if (phaseIndicator) phaseIndicator.textContent = waitingText;
+            if (phaseIndicatorMain) phaseIndicatorMain.textContent = waitingText;
             
             // Save to Firebase
             saveRoomState();
@@ -978,8 +1512,12 @@
                 gameState.currentParagraph = winner.text;
             }
             
+            // Update both paragraph displays
             const paragraphEl = document.getElementById('current-paragraph');
-            paragraphEl.textContent = gameState.currentParagraph;
+            const paragraphMainEl = document.getElementById('current-paragraph-main');
+            
+            if (paragraphEl) paragraphEl.textContent = gameState.currentParagraph;
+            if (paragraphMainEl) paragraphMainEl.textContent = gameState.currentParagraph;
             
             gameState.round++;
             updateScoreboard();
@@ -1048,9 +1586,20 @@
             gameState.selectedOption = null;
             gameState.currentPhase = 'waiting';
             
-            document.getElementById('phase-indicator').textContent = 'Paragraph saved! Starting new paragraph...';
+            const phaseText = 'Paragraph saved! Starting new paragraph...';
+            const phaseIndicator = document.getElementById('phase-indicator');
+            const phaseIndicatorMain = document.getElementById('phase-indicator-main');
+            
+            if (phaseIndicator) phaseIndicator.textContent = phaseText;
+            if (phaseIndicatorMain) phaseIndicatorMain.textContent = phaseText;
+            
             document.getElementById('writing-phase').classList.add('hidden');
             document.getElementById('voting-phase').classList.add('hidden');
+            
+            const writingPhaseMain = document.getElementById('writing-phase-main');
+            const votingPhaseMain = document.getElementById('voting-phase-main');
+            if (writingPhaseMain) writingPhaseMain.classList.add('hidden');
+            if (votingPhaseMain) votingPhaseMain.classList.add('hidden');
             
             updateUI();
             saveRoomState();
@@ -1086,7 +1635,7 @@
                     joinRoom();
                 } else if (document.activeElement.id === 'player-name') {
                     startRoom();
-                } else if (document.activeElement.id === 'sentence-input' && e.ctrlKey) {
+                } else if ((document.activeElement.id === 'sentence-input' || document.activeElement.id === 'sentence-input-main') && e.ctrlKey) {
                     submitSentence();
                 }
             }
@@ -1094,4 +1643,3 @@
     </script>
 </body>
 </html>
-
